@@ -8,4 +8,4 @@ applications:
   memory: 512M
   services:
     - myblockchain
-  host: marbles-sbedoll-89
+  host: karachain-app-team2
