@@ -318,7 +318,7 @@ function cb_deployed(e){
 		wss = new ws.Server({server: server});												//start the websocket now
 		wss.on('connection', function connection(ws) {
 			ws.on('message', function incoming(message) {
-				console.log('received ws msg:', message);
+				console.log('received ws msg:', message.toString());
 				try{
 					var data = JSON.parse(message);
 					part1.process_msg(ws, data);											//pass the websocket msg to part 1 processing
