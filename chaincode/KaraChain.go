@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-var logger = shim.NewLogger("CLDChaincode")
+// CHANGE! CLDChaincode to KCDChaincode
+var logger = shim.NewLogger("KCDChaincode")
 
 //==============================================================================================================================
 //	 Participant types - Each participant type is mapped to an integer which we use to compare to the value stored in a
@@ -20,7 +21,7 @@ var logger = shim.NewLogger("CLDChaincode")
 const AUTHORITY = "regulator"
 const SINGER = "singer"
 const PRIVATE_ENTITY = "private"
-const COPYRIGHT_AUTHORITY = "copyright_authority "
+const COPYRIGHT_AUTHORITY = "copyright_authority"
 
 //==============================================================================================================================
 //	 Status types - Asset lifecycle is broken down into z statuses, this is part of the business logic to determine what can
