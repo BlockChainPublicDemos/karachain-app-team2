@@ -499,7 +499,7 @@ func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args [
 // ============================================================================================================================
 func findMarble4Trade(stub shim.ChaincodeStubInterface, user string, color string, size int )(m Marble, err error){
 	var fail Marble;
-	fmt.Println("- start find marble 4 trade")
+	fmt.Println("- karachain start find marble 4 trade")
 	fmt.Println("looking for " + user + ", " + color + ", " + strconv.Itoa(size));
 
 	//get the marble index
