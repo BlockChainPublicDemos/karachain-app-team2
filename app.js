@@ -229,7 +229,7 @@ var options = 	{
 //						unzip_dir: 'marbles-2.0/chaincode',													//subdirectroy name of chaincode after unzipped
 //						git_url: 'http://gopkg.in/ibm-blockchain/marbles.v2/chaincode',						//GO get http url
 						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
-						unzip_dir: 'karachain/chaincode',													//subdirectroy name of chaincode after unzipped
+						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
 						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode',					//karachain repo
 					
 						//hashed cc name from prev deployment, comment me out to always deploy, uncomment me when its already deployed to skip deploying again
