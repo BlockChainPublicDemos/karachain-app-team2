@@ -50,7 +50,8 @@ type SimpleChaincode struct {
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Song struct {
-	Date_Created               string `json:"Date_Created"`
+	Song_ID                    string `json:"Song_ID"`
+	Date_created               string `json:"Date_created"`
 	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
 	Singer_Id                  string `json:"Singer_Id"`
 	Singer_Name                string `json:"Singer_Name"`
@@ -71,7 +72,7 @@ type Song struct {
 	User_Id                    string `json:"User_Id"`
 	User_role                  string `json:"User_role"`
 	User_rating                string `json:"User_role"`
-	Obsolete                   string `json:"Obsolete"`
+	Obsolete                   bool   `json:"Obsolete"`
 	Status                     string `json:"Status"`
 }
 
@@ -341,7 +342,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Printf("QUERY: Error retrieving Song: %s", err)
 			return nil, errors.New("QUERY: Error retrieving Song " + err.Error())
 		}
-		return s
+		return s, nil
 	} else if function == "Get_Rating" {
 		return t.get_rating(stub, args[0], caller, caller_affiliation) // A user should be able to get his own rating that was made in the past for a particular song
 	} else if function == "Get_Contract" { // Only allowed for singer or copyright authority to see the latest contract
@@ -378,6 +379,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	var s Song
 
 	Song_ID := "\"Song_ID\":\"" + Song_ID + "\", " // Variables to define the JSON
+	Date_created := "\"Date_created\":\"UNDEFINED\", "
 	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":0, "
 	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
 	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
@@ -401,7 +403,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Obsolete := "\"Obsolete\":\"False\""
 	Status := "\"Status\":\"False\""
 
-	Song_json := "{" + Song_ID + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + owner + Video_Link + Video_date_created + Video_QR_code_Id +
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + owner + Video_Link + Video_date_created + Video_QR_code_Id +
 		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
 		Venue_Id + Venue_Name + Copyright_Institution_Name + User_Id + User_role + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
