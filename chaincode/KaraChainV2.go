@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"regexp"
-	"strconv"
-	"strings"
+	//	"strconv"
+	//	"strings"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
@@ -342,7 +342,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 			fmt.Printf("QUERY: Error retrieving Song: %s", err)
 			return nil, errors.New("QUERY: Error retrieving Song " + err.Error())
 		}
-		return s, nil
+		return t.get_song_details(stub, s, caller, caller_affiliation)
 	} else if function == "Get_Rating" {
 		return t.get_rating(stub, args[0], caller, caller_affiliation) // A user should be able to get his own rating that was made in the past for a particular song
 	} else if function == "Get_Contract" { // Only allowed for singer or copyright authority to see the latest contract
@@ -375,10 +375,10 @@ func (t *SimpleChaincode) ping(stub shim.ChaincodeStubInterface) ([]byte, error)
 //=================================================================================================================================
 //	 Create Song - Creates the initial JSON for the Song and then saves it to the ledger.
 //=================================================================================================================================
-func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, Song_ID string) ([]byte, error) {
+func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, Song_ID_r string) ([]byte, error) {
 	var s Song
 
-	Song_ID := "\"Song_ID\":\"" + Song_ID + "\", " // Variables to define the JSON
+	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	Date_created := "\"Date_created\":\"UNDEFINED\", "
 	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":0, "
 	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
@@ -397,7 +397,6 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Copyright_State := "\"Copyright_State\":\"UNDEFINED\""
 	Venue_Id := "\"Venue_Id\":\"UNDEFINED\""
 	Venue_Name := "\"Venue_Name\":\"UNDEFINED\""
-	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\""
 	User_Id := "\"User_Id\":\"UNDEFINED\""
 	User_role := "\"User_role\":\"UNDEFINED\""
 	Obsolete := "\"Obsolete\":\"False\""
@@ -408,14 +407,14 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		Venue_Id + Venue_Name + Copyright_Institution_Name + User_Id + User_role + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
-	matched, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
+	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
 
 	if err != nil {
 		fmt.Printf("CREATE_Song: Invalid Song_ID: %s", err)
 		return nil, errors.New("Invalid Song_ID")
 	}
 
-	if Song_ID == "" {
+	if Song_ID_r == "" {
 		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
 		return nil, errors.New("Invalid Song_ID provided")
 	}
@@ -655,6 +654,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 //=================================================================================================================================
 func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
+	var err error
 	if s.Obsolete == true {
 
 		return nil, errors.New(fmt.Sprintf("Song is obsolete and cannot be updated. %v", s.Obsolete))
@@ -678,6 +678,7 @@ func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, 
 func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
 	// to be implemented
+	return nil, nil
 
 }
 
@@ -687,6 +688,7 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
 	// to be implemented
+	return nil, nil
 
 }
 
@@ -696,6 +698,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
 	// to be implemented
+	return nil, nil
 
 }
 
@@ -705,6 +708,7 @@ func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface
 func (t *SimpleChaincode) update_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
 	// to be implemented
+	return nil, nil
 
 }
 
@@ -714,6 +718,7 @@ func (t *SimpleChaincode) update_contract(stub shim.ChaincodeStubInterface, s So
 func (t *SimpleChaincode) update_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
 	// to be implemented
+	return nil, nil
 
 }
 
@@ -832,7 +837,7 @@ func (t *SimpleChaincode) update_rating(stub shim.ChaincodeStubInterface, s Song
 //=================================================================================================================================
 func (t *SimpleChaincode) song_obsolete(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
 
-	if S.Obsolete != true {
+	if s.Obsolete != true {
 
 		return nil, errors.New("Cannot make song obsolete")
 	} else {
@@ -930,6 +935,7 @@ func (t *SimpleChaincode) check_unique_Song_ID(stub shim.ChaincodeStubInterface,
 //=================================================================================================================================
 func (t *SimpleChaincode) get_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
 	// to be implemented
+	return nil, nil
 }
 
 //=================================================================================================================================
@@ -937,6 +943,7 @@ func (t *SimpleChaincode) get_rating(stub shim.ChaincodeStubInterface, Song_ID s
 //=================================================================================================================================
 func (t *SimpleChaincode) get_overall_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
 	// to be implemented
+	return nil, nil
 }
 
 //=================================================================================================================================
@@ -944,6 +951,7 @@ func (t *SimpleChaincode) get_overall_rating(stub shim.ChaincodeStubInterface, S
 //=================================================================================================================================
 func (t *SimpleChaincode) get_contract(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
 	// to be implemented
+	return nil, nil
 }
 
 //=================================================================================================================================
