@@ -228,7 +228,7 @@ var options = 	{
 						zip_url: 'https://github.com/ibm-blockchain/marbles/archive/v2.0.zip',
 						unzip_dir: 'marbles-2.0/chaincode',	
 						//http://gopkg.in/ibm-blockchain/marbles.v2/chaincode								//subdirectroy name of chaincode after unzipped
-						git_url: 'https://github.com/ibm-blockchain/marbles/chaincode',						//GO get http url
+						git_url: 'https://github.com/ibm-blockchain/marbles/chaincode'					//GO get http url
 //						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
 //						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
 //						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'					//karachain repo
