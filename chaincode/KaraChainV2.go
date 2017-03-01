@@ -44,7 +44,7 @@ const STATE_OBSOLETE = 7
 //==============================================================================================================================
 type SimpleChaincode struct {
 }
-
+var karachainIndexStr = "_karachainindex"	
 //==============================================================================================================================
 //	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
@@ -82,7 +82,7 @@ type Song struct {
 //==============================================================================================================================
 
 type Song_Holder struct {
-	Song_IDs []string `json:"Song_IDs"`
+	Song_IDs []Song `json:"Song_IDs"`
 }
 
 //==============================================================================================================================
@@ -102,21 +102,40 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//Args
 	//				0
 	//			peer_address
+	fmt.Printf("INII: Karachain function: %s ", function)
+	//test chaincode
+	// Initialize the chaincode
+	Aval, err = strconv.Atoi(args[0])
+	if err != nil {
+		return nil, errors.New("Expecting integer value for asset holding")
+	}
+
+	// Write the state to the ledger
+	err = stub.PutState("karachain", []byte(strconv.Itoa(Aval)))				//making a test var "karachain", I find it handy to read/write to it right away to test the network
+	if err != nil {
+		return nil, err
+	}
+	
+	
+	//
+	
+	
 
 	var Song_IDs Song_Holder
 
 	bytes, err := json.Marshal(Song_IDs)
 
 	if err != nil {
-		return nil, errors.New("Error creating Song record")
+		return nil, errors.New("Error creating initial song placeholders")
 	}
 
-	err = stub.PutState("Song_IDs", bytes)
+	err = stub.PutState(karachainIndexStr, bytes)
 
 	for i := 0; i < len(args); i = i + 2 {
 		t.add_ecert(stub, args[i], args[i+1])
 	}
-
+	
+	fmt.Printf("INII: Karachain exit")
 	return nil, nil
 }
 
@@ -263,7 +282,9 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song)
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	caller, caller_affiliation, err := t.get_caller_data(stub)
-
+	
+	fmt.Printf("INVOKE: Karachain function: %s ", function)
+	
 	if err != nil {
 		return nil, errors.New("Error retrieving caller information")
 	}
