@@ -279,7 +279,7 @@ function check_if_deployed(e, attempt){
 	}
 	else{
 		console.log('[preflight check]', attempt, ': testing if Karachain chaincode is ready');
-		chaincode.query.read(['Song_IDs'], function(err, resp){
+		chaincode.query.read(['karachain'], function(err, resp){
 			var cc_deployed = false;
 			try{
 				if(err == null){															//no errors is good, but can't trust that alone

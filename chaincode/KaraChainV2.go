@@ -333,12 +333,18 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	caller, caller_affiliation, err := t.get_caller_data(stub)
-	if err != nil {
-		fmt.Printf("QUERY: Error retrieving caller details", err)
-		return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
-	}
+/TODO add in authentication and certificate management
+//	caller, caller_affiliation, err := t.get_caller_data(stub)
+//	if err != nil {
+//		fmt.Printf("QUERY: Error retrieving caller details", err)
+//	return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+//
+	fmt.Println("query is running " + function)
 
+	// just do a simple test read
+	if function == "read" {													//read a variable
+		return t.read(stub, args)
+	}
 	logger.Debug("function: ", function)
 	logger.Debug("caller: ", caller)
 	logger.Debug("affiliation: ", caller_affiliation)
@@ -386,7 +392,26 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	return nil, errors.New("Received unknown function invocation " + function)
 
 }
+// ============================================================================================================================
+// Read - read a variable from chaincode state
+// ============================================================================================================================
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var name, jsonResp string
+	var err error
 
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the var to query")
+	}
+
+	name = args[0]
+	valAsbytes, err := stub.GetState(name)									//get the var from chaincode state
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil													//send it onward
+}
 //=================================================================================================================================
 //	 Ping Function
 //=================================================================================================================================
