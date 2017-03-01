@@ -225,12 +225,13 @@ var options = 	{
 					},
 					chaincode:{
 						//https://github.ibm.com/bedoll/karachain-app-team2.git
-//						zip_url: 'https://github.com/ibm-blockchain/marbles/archive/v2.0.zip',
-//						unzip_dir: 'marbles-2.0/chaincode',													//subdirectroy name of chaincode after unzipped
-//						git_url: 'http://gopkg.in/ibm-blockchain/marbles.v2/chaincode',						//GO get http url
-						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
-						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
-						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode',					//karachain repo
+						zip_url: 'https://github.com/ibm-blockchain/marbles/archive/v2.0.zip',
+						unzip_dir: 'marbles-2.0/chaincode',	
+						//http://gopkg.in/ibm-blockchain/marbles.v2/chaincode								//subdirectroy name of chaincode after unzipped
+						git_url: 'https://github.com/ibm-blockchain/marbles/chaincode',						//GO get http url
+//						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
+//						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
+//						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'					//karachain repo
 					
 						//hashed cc name from prev deployment, comment me out to always deploy, uncomment me when its already deployed to skip deploying again
 						//deployed_name: '16e655c0fce6a9882896d3d6d11f7dcd4f45027fd4764004440ff1e61340910a9d67685c4bb723272a497f3cf428e6cf6b009618612220e1471e03b6c0aa76cb'
