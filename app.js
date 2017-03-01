@@ -278,8 +278,8 @@ function check_if_deployed(e, attempt){
 		cb_deployed(msg);
 	}
 	else{
-		console.log('[preflight check]', attempt, ': testing if chaincode is ready');
-		chaincode.query.read(['_marbleindex'], function(err, resp){
+		console.log('[preflight check]', attempt, ': testing if Karachain chaincode is ready');
+		chaincode.query.read(['Song_IDs'], function(err, resp){
 			var cc_deployed = false;
 			try{
 				if(err == null){															//no errors is good, but can't trust that alone
