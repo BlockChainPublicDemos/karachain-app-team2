@@ -346,8 +346,8 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.read(stub, args)
 	}
 	logger.Debug("function: ", function)
-	logger.Debug("caller: ", caller)
-	logger.Debug("affiliation: ", caller_affiliation)
+//	logger.Debug("caller: ", caller)
+//	logger.Debug("affiliation: ", caller_affiliation)
 
 	//	if function == "get_vehicle_details" {
 	//		if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
@@ -364,6 +364,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	//		return t.ping(stub)
 	//	}
 
+/**TODO  leave out for now
 	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
 		if len(args) != 1 {
 			fmt.Printf("Incorrect number of arguments passed")
@@ -388,7 +389,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	} else if function == "ping" {
 		return t.ping(stub)
 	}
-
+*/
 	return nil, errors.New("Received unknown function invocation " + function)
 
 }
