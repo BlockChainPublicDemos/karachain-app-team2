@@ -45,7 +45,9 @@ const STATE_OBSOLETE = 7
 //==============================================================================================================================
 type SimpleChaincode struct {
 }
-var karachainIndexStr = "_karachainindex"	
+
+//TODO: need to understand how to organize the ledger .. by song, by list of songs per singer or one list of songs by all singers
+var karachainIndexStr = "_allsongsindex"	
 //==============================================================================================================================
 //	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
@@ -104,6 +106,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//				0
 	//			peer_address
 	var Aval int
+	var err error
 	fmt.Printf("INIT: Karachain function: %s ", function)
 	//test chaincode
 	// Initialize the chaincode
@@ -458,6 +461,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
 	}
 
+	//saves the song as a unique object in the ledger identified by song id (putstate)
 	_, err = t.save_changes(stub, s)
 
 	if err != nil {
@@ -465,7 +469,9 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Error saving changes")
 	}
 
-	bytes, err := stub.GetState("Song_IDs")
+	//gets the structure that contains an array of songs  .. this should probably should be a container of songs for a specific singer and there fore needs
+	//to use a singer ID
+	bytes, err := stub.GetState(karachainIndexStr)
 
 	if err != nil {
 		return nil, errors.New("Unable to get Song_ID")
@@ -478,8 +484,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	if err != nil {
 		return nil, errors.New("Corrupt Song_Holder record") // Not sure what this holder means. Need to check
 	}
-
-	err = stub.PutState("Song_IDs", bytes)
+	//TODO: need to add the new song to this container of songs (which is either a list of all songs or for a specific singer)
+	err = stub.PutState(karachainIndexStr, bytes)
 
 	if err != nil {
 		return nil, errors.New("Unable to put the state")
@@ -898,7 +904,8 @@ func (t *SimpleChaincode) get_song_details(stub shim.ChaincodeStubInterface, s S
 //=================================================================================================================================
 
 func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string) ([]byte, error) {
-	bytes, err := stub.GetState("Song_IDs")
+	//TODO: assume caller is the singer id
+	bytes, err := stub.GetState(caller)
 
 	if err != nil {
 		return nil, errors.New("Unable to get Song_IDs")
@@ -917,9 +924,9 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 	var temp []byte
 	var s Song
 
-	for _, Song_ID := range Song_IDs.Song_IDs {
+	for _, asong := range Song_IDs.Song_IDs {
 
-		s, err = t.retrieve_Song_ID(stub, Song_ID)
+		s, err = t.retrieve_Song_ID(stub, asong.Song_ID)
 
 		if err != nil {
 			return nil, errors.New("Failed to retrieve Song")
