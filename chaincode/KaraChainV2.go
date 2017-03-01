@@ -7,8 +7,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"regexp"
 	"strconv"
-	"strings"
-	"time"
+//	"strings"
+//	"time"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
