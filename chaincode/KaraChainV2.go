@@ -950,7 +950,7 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 	//loop through song IDs and get the song structures from the ledger
 	for _, songId := range Song_IDs.Song_IDs {
 
-		s, err = t.retrieve_Song_ID(stub, sondId)
+		s, err = t.retrieve_Song_ID(stub, songId)
 
 		if err != nil {
 			return nil, errors.New("Failed to retrieve Song")
