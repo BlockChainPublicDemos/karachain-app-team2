@@ -125,15 +125,20 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 	//
 
-	//	var Song_IDs Song_Holder
-	//
-	//	bytes, err := json.Marshal(Song_IDs)
-	//
-	//	if err != nil {
-	//		return nil, errors.New("Error creating initial song placeholders")
-	//	}
-	//
-	//	err = stub.PutState(karachainKey, bytes)
+	var Song_IDs Song_Holder
+
+	bytes, err := json.Marshal(Song_IDs)
+
+	if err != nil {
+		return nil, errors.New("Error creating initial song placeholders")
+	}
+
+	err = stub.PutState(karachainKey, bytes)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+
 	//
 	//	for i := 0; i < len(args); i = i + 2 {
 	//		t.add_ecert(stub, args[i], args[i+1])
