@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"regexp"
-	"strconv"
-//	"strings"
-//	"time"
+	//"strconv"
+	//	"strings"
+	//	"time"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
@@ -47,7 +47,8 @@ type SimpleChaincode struct {
 }
 
 //TODO: need to understand how to organize the ledger .. by song, by list of songs per singer or one list of songs by all singers
-var karachainKey = "_allsongsindex"	
+var karachainKey = "_allsongsindex"
+
 //==============================================================================================================================
 //	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
@@ -105,43 +106,41 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//Args
 	//				0
 	//			peer_address
-	var Aval int
+	//var Aval int
 	var err error
 	fmt.Printf("INIT: Karachain function: %s ", function)
 	//test chaincode
 	// Initialize the chaincode
-	Aval, err = strconv.Atoi(args[0])
-	if err != nil {
-		return nil, errors.New("Expecting integer value for asset holding")
-	}
+	//	Aval, err = strconv.Atoi(args[0])
+	//	if err != nil {
+	//		return nil, errors.New("Expecting integer value for asset holding")
+	//	}
 
 	// Write the state to the ledger
-	err = stub.PutState("karachain", []byte(strconv.Itoa(Aval)))				//making a test var "karachain", I find it handy to read/write to it right away to test the network
+	err = stub.PutState("karachain", []byte(args[0])) //making a test var "karachain", I find it handy to read/write to it right away to test the network
 	if err != nil {
 		return nil, err
 	}
-	
-	
-	//
-	
-	
-
-	var Song_IDs Song_Holder
-
-	bytes, err := json.Marshal(Song_IDs)
-
-	if err != nil {
-		return nil, errors.New("Error creating initial song placeholders")
-	}
-
-	err = stub.PutState(karachainKey, bytes)
-
-	for i := 0; i < len(args); i = i + 2 {
-		t.add_ecert(stub, args[i], args[i+1])
-	}
-	
-	fmt.Printf("INII: Karachain exit")
 	return nil, nil
+
+	//
+
+	//	var Song_IDs Song_Holder
+	//
+	//	bytes, err := json.Marshal(Song_IDs)
+	//
+	//	if err != nil {
+	//		return nil, errors.New("Error creating initial song placeholders")
+	//	}
+	//
+	//	err = stub.PutState(karachainKey, bytes)
+	//
+	//	for i := 0; i < len(args); i = i + 2 {
+	//		t.add_ecert(stub, args[i], args[i+1])
+	//	}
+	//
+	//	fmt.Printf("INII: Karachain exit")
+	//	return nil, nil
 }
 
 //==============================================================================================================================
@@ -287,9 +286,9 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song)
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	caller, caller_affiliation, err := t.get_caller_data(stub)
-	
+
 	fmt.Printf("INVOKE: Karachain function: %s ", function)
-	
+
 	if err != nil {
 		return nil, errors.New("Error retrieving caller information")
 	}
@@ -333,12 +332,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-//TODO add in authentication and certificate management
+	//TODO add in authentication and certificate management
 	caller, caller_affiliation, err := t.get_caller_data(stub)
 	if err != nil {
 		fmt.Printf("QUERY: Error retrieving caller details", err)
-	    return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
-	    }
+		return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+	}
 
 	fmt.Println("query is running " + function)
 
@@ -361,7 +360,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	//		return t.ping(stub)
 	//	}
 
-/**TODO  leave out for now */
+	/**TODO  leave out for now */
 	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
 		if len(args) != 1 {
 			fmt.Printf("Incorrect number of arguments passed")
@@ -385,12 +384,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.get_ecert(stub, args[0])
 	} else if function == "ping" {
 		return t.ping(stub)
-	} else if function == "read" {													//read a variable
+	} else if function == "read" { //read a variable
 		return t.read(stub, args)
-	 }
+	}
 	return nil, errors.New("Received unknown function invocation " + function)
 
 }
+
 // ============================================================================================================================
 // Read - read a variable from chaincode state
 // ============================================================================================================================
@@ -403,14 +403,15 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	}
 
 	name = args[0]
-	valAsbytes, err := stub.GetState(name)									//get the var from chaincode state
+	valAsbytes, err := stub.GetState(name) //get the var from chaincode state
 	if err != nil {
 		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
 		return nil, errors.New(jsonResp)
 	}
 
-	return valAsbytes, nil													//send it onward
+	return valAsbytes, nil //send it onward
 }
+
 //=================================================================================================================================
 //	 Ping Function
 //=================================================================================================================================
