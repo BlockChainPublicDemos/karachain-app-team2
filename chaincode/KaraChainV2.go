@@ -108,7 +108,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//			peer_address
 	//var Aval int
 	var err error
-	fmt.Printf("INIT: Karachain Function: %s ", function)
+	fmt.Printf("INIT: Karachain function: %s ", function)
 	//test chaincode
 	// Initialize the chaincode
 	//	Aval, err = strconv.Atoi(args[0])
