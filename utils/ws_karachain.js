@@ -18,6 +18,54 @@ module.exports.process_msg = function(ws, data){
 				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
 			}
 		}
+		else if(data.type == 'createsinger'){
+			console.log('karachain: create a song');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'createperformance'){
+			console.log('karachain: create performance - singer singing song');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'createvisitor'){
+			console.log('karachain: create visitor');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'createeventmgr'){
+			console.log('karachain: create event mgr');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		} 
+		else if(data.type == 'voteperformance'){
+			console.log('karachain: vote performance');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'getmyperformances'){
+			console.log('karachain: get my performances');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'getmyoffers'){
+			console.log('karachain: get my offers');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
+		else if(data.type == 'acceptoffer'){
+			console.log('karachain: accept offer');
+			if(data.name && data.color && data.size && data.user){
+				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+			}
+		}
 		else if(data.type == 'get'){
 			console.log('get marbles msg');
 			chaincode.query.read(['_marbleindex'], cb_got_index);
