@@ -1,86 +1,114 @@
-/*
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
-*/
-
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
-	"encoding/json"
-	"time"
-	"strings"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"regexp"
+	"strconv"
+//	"strings"
+//	"time"
 )
 
-// SimpleChaincode example simple Chaincode implementation
+var logger = shim.NewLogger("CLDChaincode")
+
+//==============================================================================================================================
+//	 Participant types - Each participant type is mapped to an integer which we use to compare to the value stored in a
+//						 user's eCert
+//==============================================================================================================================
+//CURRENT WORKAROUND USES ROLES CHANGE WHEN OWN USERS CAN BE CREATED SO THAT IT READ 1, 2, 3, 4, 5
+const AUTHORITY = "regulator"
+const SINGER = "singer"
+const AUDIENCE = "AUDIENCE"
+const COPYRIGHT_AUTHORITY = "copyright_authority "
+
+//==============================================================================================================================
+//	 Status types - Asset lifecycle is broken down into z statuses, this is part of the business logic to determine what can
+//					be done to the song at points in it's lifecycle
+// Not sure if we need them
+//==============================================================================================================================
+const STATE_TEMPLATE = 0
+const STATE_RECORDED = 1
+const STATE_UPDATED = 2
+const STATE_VOTED = 3
+const STATE_CONTRACT_PROVIDED = 4
+const STATE_CONTRACT_REJECTED = 5
+const STATE_CONTRACT_ACCEPTED = 6
+const STATE_OBSOLETE = 7
+
+//==============================================================================================================================
+//	 Structure Definitions
+//==============================================================================================================================
+//	Chaincode - A blank struct for use with Shim (A HyperLedger included go file used for get/put state
+//				and other HyperLedger functions)
+//==============================================================================================================================
 type SimpleChaincode struct {
 }
 
-var marbleIndexStr = "_marbleindex"				//name for the key/value that will store a list of all known marbles
-var openTradesStr = "_opentrades"				//name for the key/value that will store all open trades
-
-type Marble struct{
-	Name string `json:"name"`					//the fieldtags are needed to keep case from bouncing around
-	Color string `json:"color"`
-	Size int `json:"size"`
-	User string `json:"user"`
+//TODO: need to understand how to organize the ledger .. by song, by list of songs per singer or one list of songs by all singers
+var karachainKey = "_allsongsindex"	
+//==============================================================================================================================
+//	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
+//			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
+//==============================================================================================================================
+type Song struct {
+	Song_ID                    string `json:"Song_ID"`
+	Date_created               string `json:"Date_created"`
+	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
+	Singer_Id                  string `json:"Singer_Id"`
+	Singer_Name                string `json:"Singer_Name"`
+	Video_Id                   string `json:"Video_Id"`
+	Owner                      string `json:"Owner"`
+	Video_Link                 string `json:"Video_Link"`
+	Video_date_created         string `json:"Video_date_created"`
+	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
+	Copyright_Id               string `json:"Copyright_Id"`
+	Copyright_date_created     string `json:"Copyright_date_created"`
+	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
+	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
+	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
+	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
+	Copyright_State            string `json:"Copyright_State"`
+	Venue_Id                   string `json:"Venue_Id"`
+	Venue_Name                 string `json:"Venue_Name"`
+	User_Id                    string `json:"User_Id"`
+	User_role                  string `json:"User_role"`
+	User_rating                string `json:"User_role"`
+	Obsolete                   bool   `json:"Obsolete"`
+	Status                     string `json:"Status"`
 }
 
-type Description struct{
-	Color string `json:"color"`
-	Size int `json:"size"`
+//==============================================================================================================================
+//	Song Holder - Defines the structure that holds all the Song_IDs for songs that have been created.
+//				Used as an index when querying all songs
+//==============================================================================================================================
+
+type Song_Holder struct {
+	Song_IDs []string `json:"Song_IDs"`
 }
 
-type AnOpenTrade struct{
-	User string `json:"user"`					//user who created the open trade order
-	Timestamp int64 `json:"timestamp"`			//utc timestamp of creation
-	Want Description  `json:"want"`				//description of desired marble
-	Willing []Description `json:"willing"`		//array of marbles willing to trade away
+//==============================================================================================================================
+//	User_and_eCert - Struct for storing the JSON of a user and their ecert
+//==============================================================================================================================
+
+type User_and_eCert struct {
+	Identity string `json:"identity"`
+	eCert    string `json:"ecert"`
 }
 
-type AllTrades struct{
-	OpenTrades []AnOpenTrade `json:"open_trades"`
-}
-
-// ============================================================================================================================
-// Main
-// ============================================================================================================================
-func main() {
-	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-	}
-}
-
-// ============================================================================================================================
-// Init - reset all the things
-// ============================================================================================================================
+//==============================================================================================================================
+//	Init Function - Called when the user deploys the chaincode
+//==============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+
+	//Args
+	//				0
+	//			peer_address
 	var Aval int
 	var err error
-
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
-
+	fmt.Printf("INIT: Karachain function: %s ", function)
+	//test chaincode
 	// Initialize the chaincode
 	Aval, err = strconv.Atoi(args[0])
 	if err != nil {
@@ -88,86 +116,281 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	// Write the state to the ledger
-	err = stub.PutState("abc", []byte(strconv.Itoa(Aval)))				//making a test var "abc", I find it handy to read/write to it right away to test the network
+	err = stub.PutState("karachain", []byte(strconv.Itoa(Aval)))				//making a test var "karachain", I find it handy to read/write to it right away to test the network
 	if err != nil {
 		return nil, err
 	}
 	
-	var empty []string
-	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
-	err = stub.PutState(marbleIndexStr, jsonAsBytes)
+	
+	//
+	
+	
+
+	var Song_IDs Song_Holder
+
+	bytes, err := json.Marshal(Song_IDs)
+
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Error creating initial song placeholders")
+	}
+
+	err = stub.PutState(karachainKey, bytes)
+
+	for i := 0; i < len(args); i = i + 2 {
+		t.add_ecert(stub, args[i], args[i+1])
 	}
 	
-	var trades AllTrades
-	jsonAsBytes, _ = json.Marshal(trades)								//clear the open trade struct
-	err = stub.PutState(openTradesStr, jsonAsBytes)
-	if err != nil {
-		return nil, err
-	}
-	
+	fmt.Printf("INII: Karachain exit")
 	return nil, nil
 }
 
-// ============================================================================================================================
-// Run - Our entry point for Invocations - [LEGACY] obc-peer 4/25/2016
-// ============================================================================================================================
-func (t *SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("run is running " + function)
-	return t.Invoke(stub, function, args)
-}
+//==============================================================================================================================
+//	 General Functions
+//==============================================================================================================================
+//	 get_ecert - Takes the name passed and calls out to the REST API for HyperLedger to retrieve the ecert
+//				 for that user. Returns the ecert as retrived including html encoding.
+//==============================================================================================================================
+func (t *SimpleChaincode) get_ecert(stub shim.ChaincodeStubInterface, name string) ([]byte, error) {
 
-// ============================================================================================================================
-// Invoke - Our entry point for Invocations
-// ============================================================================================================================
-func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("invoke is running " + function)
+	ecert, err := stub.GetState(name)
 
-	// Handle different functions
-	if function == "init" {													//initialize the chaincode state, used as reset
-		return t.Init(stub, "init", args)
-	} else if function == "delete" {										//deletes an entity from its state
-		res, err := t.Delete(stub, args)
-		cleanTrades(stub)													//lets make sure all open trades are still valid
-		return res, err
-	} else if function == "write" {											//writes a value to the chaincode state
-		return t.Write(stub, args)
-	} else if function == "init_marble" {									//create a new marble
-		return t.init_marble(stub, args)
-	} else if function == "set_user" {										//change owner of a marble
-		res, err := t.set_user(stub, args)
-		cleanTrades(stub)													//lets make sure all open trades are still valid
-		return res, err
-	} else if function == "open_trade" {									//create a new trade order
-		return t.open_trade(stub, args)
-	} else if function == "perform_trade" {									//forfill an open trade order
-		res, err := t.perform_trade(stub, args)
-		cleanTrades(stub)													//lets clean just in case
-		return res, err
-	} else if function == "remove_trade" {									//cancel an open trade order
-		return t.remove_trade(stub, args)
+	if err != nil {
+		return nil, errors.New("Couldn't retrieve ecert for user " + name)
 	}
-	fmt.Println("invoke did not find func: " + function)					//error
 
-	return nil, errors.New("Received unknown function invocation")
+	return ecert, nil
 }
 
-// ============================================================================================================================
-// Query - Our entry point for Queries
-// ============================================================================================================================
+//==============================================================================================================================
+//	 add_ecert - Adds a new ecert and user pair to the table of ecerts
+//==============================================================================================================================
+
+func (t *SimpleChaincode) add_ecert(stub shim.ChaincodeStubInterface, name string, ecert string) ([]byte, error) {
+
+	err := stub.PutState(name, []byte(ecert))
+
+	if err == nil {
+		return nil, errors.New("Error storing eCert for user " + name + " identity: " + ecert)
+	}
+
+	return nil, nil
+
+}
+
+//==============================================================================================================================
+//	 get_caller - Retrieves the username of the user who invoked the chaincode.
+//				  Returns the username as a string.
+//==============================================================================================================================
+
+func (t *SimpleChaincode) get_username(stub shim.ChaincodeStubInterface) (string, error) {
+
+	username, err := stub.ReadCertAttribute("username")
+	if err != nil {
+		return "", errors.New("Couldn't get attribute 'username'. Error: " + err.Error())
+	}
+	return string(username), nil
+}
+
+//==============================================================================================================================
+//	 check_affiliation - Takes an ecert as a string, decodes it to remove html encoding then parses it and checks the
+// 				  		certificates common name. The affiliation is stored as part of the common name.
+//==============================================================================================================================
+
+func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (string, error) {
+	affiliation, err := stub.ReadCertAttribute("role")
+	if err != nil {
+		return "", errors.New("Couldn't get attribute 'role'. Error: " + err.Error())
+	}
+	return string(affiliation), nil
+
+}
+
+//==============================================================================================================================
+//	 get_caller_data - Calls the get_ecert and check_role functions and returns the ecert and role for the
+//					 name passed.
+//==============================================================================================================================
+
+func (t *SimpleChaincode) get_caller_data(stub shim.ChaincodeStubInterface) (string, string, error) {
+
+	user, err := t.get_username(stub)
+
+	// if err != nil { return "", "", err }
+
+	// ecert, err := t.get_ecert(stub, user);
+
+	// if err != nil { return "", "", err }
+
+	affiliation, err := t.check_affiliation(stub)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return user, affiliation, nil
+}
+
+//==============================================================================================================================
+//	 retrieve_Song_ID - Gets the state of the data at Song_ID in the ledger then converts it from the stored
+//					JSON into the Song struct for use in the contract. Returns the song struct.
+//					Returns empty v if it errors.
+//==============================================================================================================================
+func (t *SimpleChaincode) retrieve_Song_ID(stub shim.ChaincodeStubInterface, Song_ID string) (Song, error) {
+
+	var s Song
+
+	bytes, err := stub.GetState(Song_ID)
+
+	if err != nil {
+		fmt.Printf("RETRIEVE_Song_ID: Failed to invoke song_code: %s", err)
+		return s, errors.New("RETRIEVE_Song_ID: Error retrieving song with Song_ID = " + Song_ID)
+	}
+
+	err = json.Unmarshal(bytes, &s)
+
+	if err != nil {
+		fmt.Printf("RETRIEVE_Song_ID: Corrupt song record "+string(bytes)+": %s", err)
+		return s, errors.New("RETRIEVE_Song_ID: Corrupt song record" + string(bytes))
+	}
+
+	return s, nil
+}
+
+//==============================================================================================================================
+// save_changes - Writes to the ledger the song struct passed in a JSON format. Uses the shim file's
+//				  method 'PutState'.
+//==============================================================================================================================
+func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song) (bool, error) {
+
+	bytes, err := json.Marshal(s)
+
+	if err != nil {
+		fmt.Printf("SAVE_CHANGES: Error converting song record: %s", err)
+		return false, errors.New("Error converting song record")
+	}
+
+	err = stub.PutState(s.Song_ID, bytes)
+
+	if err != nil {
+		fmt.Printf("SAVE_CHANGES: Error storing song record: %s", err)
+		return false, errors.New("Error storing song record")
+	}
+
+	return true, nil
+}
+
+//==============================================================================================================================
+//	 Router Functions
+//==============================================================================================================================
+//	Invoke - Called on chaincode invoke. Takes a function name passed and calls that function. Converts some
+//		  initial arguments passed to other things for use in the called function e.g. name -> ecert
+//==============================================================================================================================
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+
+	caller, caller_affiliation, err := t.get_caller_data(stub)
+	
+	fmt.Printf("INVOKE: Karachain function: %s ", function)
+	
+	if err != nil {
+		return nil, errors.New("Error retrieving caller information")
+	}
+
+	if function == "create_song" { // we create a song from scratch
+		return t.create_song(stub, caller, caller_affiliation, args[0])
+	} else if function == "ping" {
+		return t.ping(stub)
+	} else { // If the function is not a create then there must be a Song so we need to retrieve the Song.
+		argPos := 1
+
+		s, err := t.retrieve_Song_ID(stub, args[argPos])
+
+		if err != nil {
+			fmt.Printf("INVOKE: Error retrieving Song: %s", err)
+			return nil, errors.New("Error retrieving Song")
+		}
+
+		if function == "Set_Contract" { // Only the copyright authority is allowed to set a contract
+			return t.set_contract(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "Set_Rating" { // Rating can be set by anybody, but only once and not by the singer
+			return t.set_rating(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "Set_Contract_Response" { // Function my only be called by the singer
+			return t.set_contract_response(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "update_song" { // Function may only be called by the singer
+			return t.update_song(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "update_contract" { // Function may only be called by the copyright institution if the existing contract
+			return t.update_contract(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "update_rating" { // Rating can be set by anybody, but only once and not by the singer. In this case, a previous rating of the user must exist
+			return t.update_rating(stub, s, caller, caller_affiliation, args[0])
+		}
+
+		return nil, errors.New("Function of the name " + function + " doesn't exist.")
+
+	}
+}
+
+//=================================================================================================================================
+//	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
+//  		initial arguments passed are passed on to the called function.
+//=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+
+//TODO add in authentication and certificate management
+	caller, caller_affiliation, err := t.get_caller_data(stub)
+	if err != nil {
+		fmt.Printf("QUERY: Error retrieving caller details", err)
+	    return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+	    }
+
 	fmt.Println("query is running " + function)
 
-	// Handle different functions
-	if function == "read" {													//read a variable
+	logger.Debug("function: ", function)
+	logger.Debug("caller: ", caller)
+	logger.Debug("affiliation: ", caller_affiliation)
+
+	//	if function == "get_vehicle_details" {
+	//		if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
+	//		v, err := t.retrieve_v5c(stub, args[0])
+	//		if err != nil { fmt.Printf("QUERY: Error retrieving v5c: %s", err); return nil, errors.New("QUERY: Error retrieving v5c "+err.Error()) }
+	//		return t.get_vehicle_details(stub, v, caller, caller_affiliation)
+	//	} else if function == "check_unique_v5c" {
+	//		return t.check_unique_v5c(stub, args[0], caller, caller_affiliation)
+	//	} else if function == "get_vehicles" {
+	//		return t.get_vehicles(stub, caller, caller_affiliation)
+	//	} else if function == "get_ecert" {
+	//		return t.get_ecert(stub, args[0])
+	//	} else if function == "ping" {
+	//		return t.ping(stub)
+	//	}
+
+/**TODO  leave out for now */
+	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
+		if len(args) != 1 {
+			fmt.Printf("Incorrect number of arguments passed")
+			return nil, errors.New("QUERY: Incorrect number of arguments passed")
+		}
+		s, err := t.retrieve_Song_ID(stub, args[0])
+		if err != nil {
+			fmt.Printf("QUERY: Error retrieving Song: %s", err)
+			return nil, errors.New("QUERY: Error retrieving Song " + err.Error())
+		}
+		return t.get_song_details(stub, s, caller, caller_affiliation)
+	} else if function == "Get_Rating" {
+		return t.get_rating(stub, args[0], caller, caller_affiliation) // A user should be able to get his own rating that was made in the past for a particular song
+	} else if function == "Get_Contract" { // Only allowed for singer or copyright authority to see the latest contract
+		return t.get_contract(stub, args[0], caller, caller_affiliation)
+	} else if function == "Get_overall_Rating" { //Anybody should be able to see the overall (average) rating of a song
+		return t.get_overall_rating(stub, args[0], caller, caller_affiliation)
+	} else if function == "Get_Songs" {
+		return t.get_songs(stub, caller, caller_affiliation)
+	} else if function == "get_ecert" {
+		return t.get_ecert(stub, args[0])
+	} else if function == "ping" {
+		return t.ping(stub)
+	} else if function == "read" {													//read a variable
 		return t.read(stub, args)
-	}
-	fmt.Println("query did not find func: " + function)						//error
+	 }
+	return nil, errors.New("Received unknown function invocation " + function)
 
-	return nil, errors.New("Received unknown function query")
 }
-
 // ============================================================================================================================
 // Read - read a variable from chaincode state
 // ============================================================================================================================
@@ -188,466 +411,611 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 
 	return valAsbytes, nil													//send it onward
 }
-
-// ============================================================================================================================
-// Delete - remove a key/value pair from state
-// ============================================================================================================================
-func (t *SimpleChaincode) Delete(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
-	
-	name := args[0]
-	err := stub.DelState(name)													//remove the key from chaincode state
-	if err != nil {
-		return nil, errors.New("Failed to delete state")
-	}
-
-	//get the marble index
-	marblesAsBytes, err := stub.GetState(marbleIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get marble index")
-	}
-	var marbleIndex []string
-	json.Unmarshal(marblesAsBytes, &marbleIndex)								//un stringify it aka JSON.parse()
-	
-	//remove marble from index
-	for i,val := range marbleIndex{
-		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for " + name)
-		if val == name{															//find the correct marble
-			fmt.Println("found marble")
-			marbleIndex = append(marbleIndex[:i], marbleIndex[i+1:]...)			//remove it
-			for x:= range marbleIndex{											//debug prints...
-				fmt.Println(string(x) + " - " + marbleIndex[x])
-			}
-			break
-		}
-	}
-	jsonAsBytes, _ := json.Marshal(marbleIndex)									//save new index
-	err = stub.PutState(marbleIndexStr, jsonAsBytes)
-	return nil, nil
+//=================================================================================================================================
+//	 Ping Function
+//=================================================================================================================================
+//	 Pings the peer to keep the connection alive
+//=================================================================================================================================
+func (t *SimpleChaincode) ping(stub shim.ChaincodeStubInterface) ([]byte, error) {
+	return []byte("Hello, world!"), nil
 }
 
-// ============================================================================================================================
-// Write - write variable into chaincode state
-// ============================================================================================================================
-func (t *SimpleChaincode) Write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var name, value string // Entities
-	var err error
-	fmt.Println("running write()")
+//=================================================================================================================================
+//	 Create Function
+//=================================================================================================================================
+//	 Create Song - Creates the initial JSON for the Song and then saves it to the ledger.
+//=================================================================================================================================
+func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, Song_ID_r string) ([]byte, error) {
+	var s Song
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the variable and value to set")
-	}
+	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
+	Date_created := "\"Date_created\":\"UNDEFINED\", "
+	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":0, "
+	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
+	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
+	Video_Id := "\"Video_Id \":\"UNDEFINED\", "
+	owner := "\"Owner\":\"" + caller + "\", "
+	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
+	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
+	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\", "
+	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\""
+	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\""
+	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\""
+	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\""
+	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\""
+	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\""
+	Copyright_State := "\"Copyright_State\":\"UNDEFINED\""
+	Venue_Id := "\"Venue_Id\":\"UNDEFINED\""
+	Venue_Name := "\"Venue_Name\":\"UNDEFINED\""
+	User_Id := "\"User_Id\":\"UNDEFINED\""
+	User_role := "\"User_role\":\"UNDEFINED\""
+	Obsolete := "\"Obsolete\":\"False\""
+	Status := "\"Status\":\"False\""
 
-	name = args[0]															//rename for funsies
-	value = args[1]
-	err = stub.PutState(name, []byte(value))								//write the variable into the chaincode state
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + owner + Video_Link + Video_date_created + Video_QR_code_Id +
+		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
+		Venue_Id + Venue_Name + Copyright_Institution_Name + User_Id + User_role + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+
+	// Do we need a certain criteria for a song ID?
+	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
+
 	if err != nil {
-		return nil, err
+		fmt.Printf("CREATE_Song: Invalid Song_ID: %s", err)
+		return nil, errors.New("Invalid Song_ID")
 	}
+
+	if Song_ID_r == "" {
+		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
+		return nil, errors.New("Invalid Song_ID provided")
+	}
+
+	err = json.Unmarshal([]byte(Song_json), &s) // Convert the JSON defined above into a Song object for go
+
+	if err != nil {
+		return nil, errors.New("Invalid JSON object")
+	}
+
+	record, err := stub.GetState(s.Song_ID) // If not an error then a record exists so cant create a new car with this Song_ID as it must be unique
+
+	if record != nil {
+		return nil, errors.New("Song already exists")
+	}
+
+	if caller_affiliation != SINGER { // Only the singer can create a new Song
+		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
+	}
+
+	//saves the song as a unique object in the ledger identified by song id (putstate)
+	_, err = t.save_changes(stub, s)
+
+	if err != nil {
+		fmt.Printf("CREATE_SONG: Error saving changes: %s", err)
+		return nil, errors.New("Error saving changes")
+	}
+
+	//gets the structure that contains an array of songs  .. this should probably should be a container of songs for a specific singer and there fore needs
+	//to use a singer ID
+	bytes, err := stub.GetState(karachainKey)
+
+	if err != nil {
+		return nil, errors.New("Unable to get Song_ID")
+	}
+
+	var Song_IDs Song_Holder // Not sure what this holder means. Need to check
+
+	err = json.Unmarshal(bytes, &Song_IDs)
+
+	if err != nil {
+		return nil, errors.New("Corrupt Song_Holder record") // Not sure what this holder means. Need to check
+	}
+	//TODO: need to add the new song to this container of songs (which is either a list of all songs or for a specific singer)
+	err = stub.PutState(karachainKey, bytes)
+
+	if err != nil {
+		return nil, errors.New("Unable to put the state")
+	}
+
 	return nil, nil
+
 }
 
-// ============================================================================================================================
-// Init Marble - create a new marble, store into chaincode state
-// ============================================================================================================================
-func (t *SimpleChaincode) init_marble(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+//=================================================================================================================================
+//	 Transfer Functions
+//=================================================================================================================================
+//	 singer_to_authority - might be needed to transfer a song from a singer to a copyright authority
+//=================================================================================================================================
+//func (t *SimpleChaincode) singer_to_authority(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if  S.Owner == caller &&
+//		S.Obsolete == false { // If the roles and users are ok
+//
+//		S.Owner = COPYRIGHT_AUTHORITY       // then make the owner the new owner
+//		S.Status = STATE_CONTRACT_ACCEPTED  // and mark it in the state of manufacture
+//
+//	} else { // Otherwise if there is an error
+//		fmt.Printf("singer_to_authority: Permission Denied")
+//		return nil, errors.New(fmt.Sprintf("Permission Denied. singer_to_authority. %v %v %v %v %v ", s, s.Status, v.Owner, caller, caller_affiliation))
+//
+//	}
+//
+//	_, err := t.save_changes(stub, s) // Write new state
+//
+//	if err != nil {
+//		fmt.Printf("singer_to_authority: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil // We are Done
+//
+//}
+//
+
+////=================================================================================================================================
+////	 manufacturer_to_private
+////=================================================================================================================================
+//func (t *SimpleChaincode) manufacturer_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if v.Make == "UNDEFINED" ||
+//		v.Model == "UNDEFINED" ||
+//		v.Reg == "UNDEFINED" ||
+//		v.Colour == "UNDEFINED" ||
+//		v.VIN == 0 { //If any part of the car is undefined it has not bene fully manufacturered so cannot be sent
+//		fmt.Printf("MANUFACTURER_TO_PRIVATE: Car not fully defined")
+//		return nil, errors.New(fmt.Sprintf("Car not fully defined. %v", v))
+//	}
+//
+//	if v.Status == STATE_MANUFACTURE &&
+//		v.Owner == caller &&
+//		caller_affiliation == MANUFACTURER &&
+//		recipient_affiliation == PRIVATE_ENTITY &&
+//		v.Scrapped == false {
+//
+//		v.Owner = recipient_name
+//		v.Status = STATE_PRIVATE_OWNERSHIP
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprintf("Permission Denied. manufacturer_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("MANUFACTURER_TO_PRIVATE: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+//
+////=================================================================================================================================
+////	 private_to_private
+////=================================================================================================================================
+//func (t *SimpleChaincode) private_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
+//		v.Owner == caller &&
+//		caller_affiliation == PRIVATE_ENTITY &&
+//		recipient_affiliation == PRIVATE_ENTITY &&
+//		v.Scrapped == false {
+//
+//		v.Owner = recipient_name
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprintf("Permission Denied. private_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("PRIVATE_TO_PRIVATE: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+//
+////=================================================================================================================================
+////	 private_to_lease_company
+////=================================================================================================================================
+//func (t *SimpleChaincode) private_to_lease_company(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
+//		v.Owner == caller &&
+//		caller_affiliation == PRIVATE_ENTITY &&
+//		recipient_affiliation == LEASE_COMPANY &&
+//		v.Scrapped == false {
+//
+//		v.Owner = recipient_name
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprintf("Permission denied. private_to_lease_company. %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
+//
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//	if err != nil {
+//		fmt.Printf("PRIVATE_TO_LEASE_COMPANY: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+//
+////=================================================================================================================================
+////	 lease_company_to_private
+////=================================================================================================================================
+//func (t *SimpleChaincode) lease_company_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
+//		v.Owner == caller &&
+//		caller_affiliation == LEASE_COMPANY &&
+//		recipient_affiliation == PRIVATE_ENTITY &&
+//		v.Scrapped == false {
+//
+//		v.Owner = recipient_name
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprintf("Permission Denied. lease_company_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//	if err != nil {
+//		fmt.Printf("LEASE_COMPANY_TO_PRIVATE: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+//
+////=================================================================================================================================
+////	 private_to_scrap_merchant
+////=================================================================================================================================
+//func (t *SimpleChaincode) private_to_scrap_merchant(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
+//
+//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
+//		v.Owner == caller &&
+//		caller_affiliation == PRIVATE_ENTITY &&
+//		recipient_affiliation == SCRAP_MERCHANT &&
+//		v.Scrapped == false {
+//
+//		v.Owner = recipient_name
+//		v.Status = STATE_BEING_SCRAPPED
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprintf("Permission Denied. private_to_scrap_merchant. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("PRIVATE_TO_SCRAP_MERCHANT: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+
+//=================================================================================================================================
+//	 Update Functions
+//=================================================================================================================================
+//	 update_song
+//=================================================================================================================================
+func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+
 	var err error
+	if s.Obsolete == true {
 
-	//   0       1       2     3
-	// "asdf", "blue", "35", "bob"
-	if len(args) != 4 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 4")
-	}
+		return nil, errors.New(fmt.Sprintf("Song is obsolete and cannot be updated. %v", s.Obsolete))
 
-	//input sanitation
-	fmt.Println("- start init marble")
-	if len(args[0]) <= 0 {
-		return nil, errors.New("1st argument must be a non-empty string")
-	}
-	if len(args[1]) <= 0 {
-		return nil, errors.New("2nd argument must be a non-empty string")
-	}
-	if len(args[2]) <= 0 {
-		return nil, errors.New("3rd argument must be a non-empty string")
-	}
-	if len(args[3]) <= 0 {
-		return nil, errors.New("4th argument must be a non-empty string")
-	}
-	name := args[0]
-	color := strings.ToLower(args[1])
-	user := strings.ToLower(args[3])
-	size, err := strconv.Atoi(args[2])
-	if err != nil {
-		return nil, errors.New("3rd argument must be a numeric string")
 	}
 
-	//check if marble already exists
-	marbleAsBytes, err := stub.GetState(name)
-	if err != nil {
-		return nil, errors.New("Failed to get marble name")
-	}
-	res := Marble{}
-	json.Unmarshal(marbleAsBytes, &res)
-	if res.Name == name{
-		fmt.Println("This marble arleady exists: " + name)
-		fmt.Println(res);
-		return nil, errors.New("This marble arleady exists")				//all stop a marble by this name exists
-	}
-	
-	//build the marble json string manually
-	str := `{"name": "` + name + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "user": "` + user + `"}`
-	err = stub.PutState(name, []byte(str))									//store marble with id as key
-	if err != nil {
-		return nil, err
-	}
-		
-	//get the marble index
-	marblesAsBytes, err := stub.GetState(marbleIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get marble index")
-	}
-	var marbleIndex []string
-	json.Unmarshal(marblesAsBytes, &marbleIndex)							//un stringify it aka JSON.parse()
-	
-	//append
-	marbleIndex = append(marbleIndex, name)									//add marble name to index list
-	fmt.Println("! marble index: ", marbleIndex)
-	jsonAsBytes, _ := json.Marshal(marbleIndex)
-	err = stub.PutState(marbleIndexStr, jsonAsBytes)						//store name of marble
+	_, err = t.save_changes(stub, s) // Save the changes in the blockchain
 
-	fmt.Println("- end init marble")
+	if err != nil {
+		fmt.Printf("UPDATE_SONG: Error saving changes: %s", err)
+		return nil, errors.New("Error saving changes")
+	}
+
 	return nil, nil
+
 }
 
-// ============================================================================================================================
-// Set User Permission on Marble
-// ============================================================================================================================
-func (t *SimpleChaincode) set_user(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var err error
-	
-	//   0       1
-	// "name", "bob"
-	if len(args) < 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2")
-	}
-	
-	fmt.Println("- start set user")
-	fmt.Println(args[0] + " - " + args[1])
-	marbleAsBytes, err := stub.GetState(args[0])
-	if err != nil {
-		return nil, errors.New("Failed to get thing")
-	}
-	res := Marble{}
-	json.Unmarshal(marbleAsBytes, &res)										//un stringify it aka JSON.parse()
-	res.User = args[1]														//change the user
-	
-	jsonAsBytes, _ := json.Marshal(res)
-	err = stub.PutState(args[0], jsonAsBytes)								//rewrite the marble with id as key
-	if err != nil {
-		return nil, err
-	}
-	
-	fmt.Println("- end set user")
+//=================================================================================================================================
+//	 set_rating - A song is voted by an user. Only 1 vote allowed per user and song.
+//=================================================================================================================================
+func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+
+	// to be implemented
 	return nil, nil
+
 }
 
-// ============================================================================================================================
-// Open Trade - create an open trade for a marble you want with marbles you have 
-// ============================================================================================================================
-func (t *SimpleChaincode) open_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var err error
-	var will_size int
-	var trade_away Description
-	
-	//	0        1      2     3      4      5       6
-	//["bob", "blue", "16", "red", "16"] *"blue", "35*
-	if len(args) < 5 {
-		return nil, errors.New("Incorrect number of arguments. Expecting like 5?")
-	}
-	if len(args)%2 == 0{
-		return nil, errors.New("Incorrect number of arguments. Expecting an odd number")
-	}
+//=================================================================================================================================
+//	 set_contract - The CA may provide a contract to a singer for a particular song. Only 1 contract allowed per copyright authority
+//=================================================================================================================================
+func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
-	size1, err := strconv.Atoi(args[2])
-	if err != nil {
-		return nil, errors.New("3rd argument must be a numeric string")
-	}
+	// to be implemented
+	return nil, nil
 
-	open := AnOpenTrade{}
-	open.User = args[0]
-	open.Timestamp = makeTimestamp()											//use timestamp as an ID
-	open.Want.Color = args[1]
-	open.Want.Size =  size1
-	fmt.Println("- start open trade")
-	jsonAsBytes, _ := json.Marshal(open)
-	err = stub.PutState("_debug1", jsonAsBytes)
+}
 
-	for i:=3; i < len(args); i++ {												//create and append each willing trade
-		will_size, err = strconv.Atoi(args[i + 1])
+//=================================================================================================================================
+//	 set_contract_response - The singer can either accept or reject a contract.
+//=================================================================================================================================
+func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+
+	// to be implemented
+	return nil, nil
+
+}
+
+//=================================================================================================================================
+//	 update_contract - A new contract can be provided by the CA. This again has to be approved or rejected by the singer.
+//=================================================================================================================================
+func (t *SimpleChaincode) update_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+
+	// to be implemented
+	return nil, nil
+
+}
+
+//=================================================================================================================================
+//	 update_rating - A user can update its own rating that was done in the past.
+//=================================================================================================================================
+func (t *SimpleChaincode) update_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+
+	// to be implemented
+	return nil, nil
+
+}
+
+//=================================================================================================================================
+//	 update_registration
+//=================================================================================================================================
+//func (t *SimpleChaincode) update_registration(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+//
+//	if v.Owner == caller &&
+//		caller_affiliation != SCRAP_MERCHANT &&
+//		v.Scrapped == false {
+//
+//		v.Reg = new_value
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprint("Permission denied. update_registration"))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("UPDATE_REGISTRATION: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+
+//=================================================================================================================================
+//	 update_colour
+////=================================================================================================================================
+//func (t *SimpleChaincode) update_colour(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+//
+//	if v.Owner == caller &&
+//		caller_affiliation == MANUFACTURER && /*((v.Owner				== caller			&&
+//		caller_affiliation	== MANUFACTURER)		||
+//		caller_affiliation	== AUTHORITY)			&&*/
+//		v.Scrapped == false {
+//
+//		v.Colour = new_value
+//	} else {
+//
+//		return nil, errors.New(fmt.Sprint("Permission denied. update_colour %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("UPDATE_COLOUR: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+
+//=================================================================================================================================
+//	 update_make
+////=================================================================================================================================
+//func (t *SimpleChaincode) update_make(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+//
+//	if v.Status == STATE_MANUFACTURE &&
+//		v.Owner == caller &&
+//		caller_affiliation == MANUFACTURER &&
+//		v.Scrapped == false {
+//
+//		v.Make = new_value
+//	} else {
+//
+//		return nil, errors.New(fmt.Sprint("Permission denied. update_make %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
+//
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+
+//=================================================================================================================================
+////	 update_model
+////=================================================================================================================================
+//func (t *SimpleChaincode) update_model(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+//
+//	if v.Status == STATE_MANUFACTURE &&
+//		v.Owner == caller &&
+//		caller_affiliation == MANUFACTURER &&
+//		v.Scrapped == false {
+//
+//		v.Model = new_value
+//
+//	} else {
+//		return nil, errors.New(fmt.Sprint("Permission denied. update_model %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
+//
+//	}
+//
+//	_, err := t.save_changes(stub, v)
+//
+//	if err != nil {
+//		fmt.Printf("UPDATE_MODEL: Error saving changes: %s", err)
+//		return nil, errors.New("Error saving changes")
+//	}
+//
+//	return nil, nil
+//
+//}
+
+//=================================================================================================================================
+//	 Song Obsolete - not sure if we need this function. I have just implemented it if we want to make songs obsolete
+//=================================================================================================================================
+func (t *SimpleChaincode) song_obsolete(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
+
+	if s.Obsolete != true {
+
+		return nil, errors.New("Cannot make song obsolete")
+	} else {
+		_, err := t.save_changes(stub, s)
+
 		if err != nil {
-			msg := "is not a numeric string " + args[i + 1]
-			fmt.Println(msg)
-			return nil, errors.New(msg)
-		}
-		
-		trade_away = Description{}
-		trade_away.Color = args[i]
-		trade_away.Size =  will_size
-		fmt.Println("! created trade_away: " + args[i])
-		jsonAsBytes, _ = json.Marshal(trade_away)
-		err = stub.PutState("_debug2", jsonAsBytes)
-		
-		open.Willing = append(open.Willing, trade_away)
-		fmt.Println("! appended willing to open")
-		i++;
-	}
-	
-	//get the open trade struct
-	tradesAsBytes, err := stub.GetState(openTradesStr)
-	if err != nil {
-		return nil, errors.New("Failed to get opentrades")
-	}
-	var trades AllTrades
-	json.Unmarshal(tradesAsBytes, &trades)										//un stringify it aka JSON.parse()
-	
-	trades.OpenTrades = append(trades.OpenTrades, open);						//append to open trades
-	fmt.Println("! appended open to trades")
-	jsonAsBytes, _ = json.Marshal(trades)
-	err = stub.PutState(openTradesStr, jsonAsBytes)								//rewrite open orders
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("- end open trade")
-	return nil, nil
-}
+			fmt.Printf("SONG_OBSOLETE: Error saving changes: %s", err)
+			return nil, errors.New("SONG_OBSOLETE: Error saving changes")
+		} else {
+			return nil, nil
 
-// ============================================================================================================================
-// Perform Trade - close an open trade and move ownership
-// ============================================================================================================================
-func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var err error
-	
-	//	0		1					2					3				4					5
-	//[data.id, data.closer.user, data.closer.name, data.opener.user, data.opener.color, data.opener.size]
-	if len(args) < 6 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 6")
-	}
-	
-	fmt.Println("- start close trade")
-	timestamp, err := strconv.ParseInt(args[0], 10, 64)
-	if err != nil {
-		return nil, errors.New("1st argument must be a numeric string")
-	}
-	
-	size, err := strconv.Atoi(args[5])
-	if err != nil {
-		return nil, errors.New("6th argument must be a numeric string")
-	}
-	
-	//get the open trade struct
-	tradesAsBytes, err := stub.GetState(openTradesStr)
-	if err != nil {
-		return nil, errors.New("Failed to get opentrades")
-	}
-	var trades AllTrades
-	json.Unmarshal(tradesAsBytes, &trades)															//un stringify it aka JSON.parse()
-	
-	for i := range trades.OpenTrades{																//look for the trade
-		fmt.Println("looking at " + strconv.FormatInt(trades.OpenTrades[i].Timestamp, 10) + " for " + strconv.FormatInt(timestamp, 10))
-		if trades.OpenTrades[i].Timestamp == timestamp{
-			fmt.Println("found the trade");
-			
-			
-			marbleAsBytes, err := stub.GetState(args[2])
-			if err != nil {
-				return nil, errors.New("Failed to get thing")
-			}
-			closersMarble := Marble{}
-			json.Unmarshal(marbleAsBytes, &closersMarble)											//un stringify it aka JSON.parse()
-			
-			//verify if marble meets trade requirements
-			if closersMarble.Color != trades.OpenTrades[i].Want.Color || closersMarble.Size != trades.OpenTrades[i].Want.Size {
-				msg := "marble in input does not meet trade requriements"
-				fmt.Println(msg)
-				return nil, errors.New(msg)
-			}
-			
-			marble, e := findMarble4Trade(stub, trades.OpenTrades[i].User, args[4], size)			//find a marble that is suitable from opener
-			if(e == nil){
-				fmt.Println("! no errors, proceeding")
-
-				t.set_user(stub, []string{args[2], trades.OpenTrades[i].User})						//change owner of selected marble, closer -> opener
-				t.set_user(stub, []string{marble.Name, args[1]})									//change owner of selected marble, opener -> closer
-			
-				trades.OpenTrades = append(trades.OpenTrades[:i], trades.OpenTrades[i+1:]...)		//remove trade
-				jsonAsBytes, _ := json.Marshal(trades)
-				err = stub.PutState(openTradesStr, jsonAsBytes)										//rewrite open orders
-				if err != nil {
-					return nil, err
-				}
-			}
 		}
 	}
-	fmt.Println("- end close trade")
-	return nil, nil
 }
 
-// ============================================================================================================================
-// findMarble4Trade - look for a matching marble that this user owns and return it
-// ============================================================================================================================
-func findMarble4Trade(stub shim.ChaincodeStubInterface, user string, color string, size int )(m Marble, err error){
-	var fail Marble;
-	fmt.Println("- karachain start find marble 4 trade")
-	fmt.Println("looking for " + user + ", " + color + ", " + strconv.Itoa(size));
+//=================================================================================================================================
+//	 Read Functions
+//=================================================================================================================================
+//	 get_song_details - Returns details of a song
+//=================================================================================================================================
+func (t *SimpleChaincode) get_song_details(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
 
-	//get the marble index
-	marblesAsBytes, err := stub.GetState(marbleIndexStr)
+	bytes, err := json.Marshal(s)
+
 	if err != nil {
-		return fail, errors.New("Failed to get marble index")
+		return nil, errors.New("GET_SONG_DETAILS: Invalid song object")
+	} else {
+		return bytes, nil
 	}
-	var marbleIndex []string
-	json.Unmarshal(marblesAsBytes, &marbleIndex)								//un stringify it aka JSON.parse()
-	
-	for i:= range marbleIndex{													//iter through all the marbles
-		//fmt.Println("looking @ marble name: " + marbleIndex[i]);
 
-		marbleAsBytes, err := stub.GetState(marbleIndex[i])						//grab this marble
+}
+
+//=================================================================================================================================
+//	 get_songs -  Returns all songs and details
+//=================================================================================================================================
+
+func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string) ([]byte, error) {
+	//Get the list of all the song IDs
+	bytes, err := stub.GetState(karachainKey)
+
+	if err != nil {
+		return nil, errors.New("Unable to get Song_IDs")
+	}
+
+	var Song_IDs Song_Holder
+
+	err = json.Unmarshal(bytes, &Song_IDs)
+
+	if err != nil {
+		return nil, errors.New("Corrupt Song")
+	}
+
+	result := "["
+
+	var temp []byte
+	var s Song
+	//loop through song IDs and get the song structures from the ledger
+	for _, songId := range Song_IDs.Song_IDs {
+
+		s, err = t.retrieve_Song_ID(stub, songId)
+
 		if err != nil {
-			return fail, errors.New("Failed to get marble")
+			return nil, errors.New("Failed to retrieve Song")
 		}
-		res := Marble{}
-		json.Unmarshal(marbleAsBytes, &res)										//un stringify it aka JSON.parse()
-		//fmt.Println("looking @ " + res.User + ", " + res.Color + ", " + strconv.Itoa(res.Size));
-		
-		//check for user && color && size
-		if strings.ToLower(res.User) == strings.ToLower(user) && strings.ToLower(res.Color) == strings.ToLower(color) && res.Size == size{
-			fmt.Println("found a marble: " + res.Name)
-			fmt.Println("! end find marble 4 trade")
-			return res, nil
+
+		temp, err = t.get_song_details(stub, s, caller, caller_affiliation)
+
+		if err == nil {
+			result += string(temp) + ","
 		}
 	}
-	
-	fmt.Println("- end find marble 4 trade - error")
-	return fail, errors.New("Did not find marble to use in this trade")
+
+	if len(result) == 1 {
+		result = "[]"
+	} else {
+		result = result[:len(result)-1] + "]"
+	}
+
+	return []byte(result), nil
 }
 
-// ============================================================================================================================
-// Make Timestamp - create a timestamp in ms
-// ============================================================================================================================
-func makeTimestamp() int64 {
-    return time.Now().UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+//=================================================================================================================================
+//	 check_unique_Song_ID - Song ID must be unique in the BlockChain when a new song is created
+//=================================================================================================================================
+func (t *SimpleChaincode) check_unique_Song_ID(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+	_, err := t.retrieve_Song_ID(stub, Song_ID)
+	if err == nil {
+		return []byte("false"), errors.New("Song_ID is not unique")
+	} else {
+		return []byte("true"), nil
+	}
 }
 
-// ============================================================================================================================
-// Remove Open Trade - close an open trade
-// ============================================================================================================================
-func (t *SimpleChaincode) remove_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var err error
-	
-	//	0
-	//[data.id]
-	if len(args) < 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
-	
-	fmt.Println("- start remove trade")
-	timestamp, err := strconv.ParseInt(args[0], 10, 64)
-	if err != nil {
-		return nil, errors.New("1st argument must be a numeric string")
-	}
-	
-	//get the open trade struct
-	tradesAsBytes, err := stub.GetState(openTradesStr)
-	if err != nil {
-		return nil, errors.New("Failed to get opentrades")
-	}
-	var trades AllTrades
-	json.Unmarshal(tradesAsBytes, &trades)																//un stringify it aka JSON.parse()
-	
-	for i := range trades.OpenTrades{																	//look for the trade
-		//fmt.Println("looking at " + strconv.FormatInt(trades.OpenTrades[i].Timestamp, 10) + " for " + strconv.FormatInt(timestamp, 10))
-		if trades.OpenTrades[i].Timestamp == timestamp{
-			fmt.Println("found the trade");
-			trades.OpenTrades = append(trades.OpenTrades[:i], trades.OpenTrades[i+1:]...)				//remove this trade
-			jsonAsBytes, _ := json.Marshal(trades)
-			err = stub.PutState(openTradesStr, jsonAsBytes)												//rewrite open orders
-			if err != nil {
-				return nil, err
-			}
-			break
-		}
-	}
-	
-	fmt.Println("- end remove trade")
+//=================================================================================================================================
+//	 Get_rating - Read the rating that was done by a user for a certain song
+//=================================================================================================================================
+func (t *SimpleChaincode) get_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+	// to be implemented
 	return nil, nil
 }
 
-// ============================================================================================================================
-// Clean Up Open Trades - make sure open trades are still possible, remove choices that are no longer possible, remove trades that have no valid choices
-// ============================================================================================================================
-func cleanTrades(stub shim.ChaincodeStubInterface)(err error){
-	var didWork = false
-	fmt.Println("- start clean trades")
-	
-	//get the open trade struct
-	tradesAsBytes, err := stub.GetState(openTradesStr)
+//=================================================================================================================================
+//	 Get_overall_rating - Calculate the average rating of a song
+//=================================================================================================================================
+func (t *SimpleChaincode) get_overall_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+	// to be implemented
+	return nil, nil
+}
+
+//=================================================================================================================================
+//	 Get_contract - If a contract was provided, it can be shown to the singer or CA
+//=================================================================================================================================
+func (t *SimpleChaincode) get_contract(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+	// to be implemented
+	return nil, nil
+}
+
+//=================================================================================================================================
+//	 Main - main - Starts up the chaincode
+//=================================================================================================================================
+func main() {
+
+	err := shim.Start(new(SimpleChaincode))
+
 	if err != nil {
-		return errors.New("Failed to get opentrades")
+		fmt.Printf("Error starting Chaincode: %s", err)
 	}
-	var trades AllTrades
-	json.Unmarshal(tradesAsBytes, &trades)																		//un stringify it aka JSON.parse()
-	
-	fmt.Println("# trades " + strconv.Itoa(len(trades.OpenTrades)))
-	for i:=0; i<len(trades.OpenTrades); {																		//iter over all the known open trades
-		fmt.Println(strconv.Itoa(i) + ": looking at trade " + strconv.FormatInt(trades.OpenTrades[i].Timestamp, 10))
-		
-		fmt.Println("# options " + strconv.Itoa(len(trades.OpenTrades[i].Willing)))
-		for x:=0; x<len(trades.OpenTrades[i].Willing); {														//find a marble that is suitable
-			fmt.Println("! on next option " + strconv.Itoa(i) + ":" + strconv.Itoa(x))
-			_, e := findMarble4Trade(stub, trades.OpenTrades[i].User, trades.OpenTrades[i].Willing[x].Color, trades.OpenTrades[i].Willing[x].Size)
-			if(e != nil){
-				fmt.Println("! errors with this option, removing option")
-				didWork = true
-				trades.OpenTrades[i].Willing = append(trades.OpenTrades[i].Willing[:x], trades.OpenTrades[i].Willing[x+1:]...)	//remove this option
-				x--;
-			}else{
-				fmt.Println("! this option is fine")
-			}
-			
-			x++
-			fmt.Println("! x:" + strconv.Itoa(x))
-			if x >= len(trades.OpenTrades[i].Willing) {														//things might have shifted, recalcuate
-				break
-			}
-		}
-		
-		if len(trades.OpenTrades[i].Willing) == 0 {
-			fmt.Println("! no more options for this trade, removing trade")
-			didWork = true
-			trades.OpenTrades = append(trades.OpenTrades[:i], trades.OpenTrades[i+1:]...)					//remove this trade
-			i--;
-		}
-		
-		i++
-		fmt.Println("! i:" + strconv.Itoa(i))
-		if i >= len(trades.OpenTrades) {																	//things might have shifted, recalcuate
-			break
-		}
-	}
-
-	if(didWork){
-		fmt.Println("! saving open trade changes")
-		jsonAsBytes, _ := json.Marshal(trades)
-		err = stub.PutState(openTradesStr, jsonAsBytes)														//rewrite open orders
-		if err != nil {
-			return err
-		}
-	}else{
-		fmt.Println("! all open trades are fine")
-	}
-
-	fmt.Println("- end clean trades")
-	return nil
 }

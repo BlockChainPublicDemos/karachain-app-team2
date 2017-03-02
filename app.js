@@ -138,8 +138,9 @@ require('cf-deployment-tracker-client').track();		//reports back to us, this hel
 // ============================================================================================================================
 // 														Work Area
 // ============================================================================================================================
-var part1 = require('./utils/ws_part1');														//websocket message processing for part 1
-var part2 = require('./utils/ws_part2');														//websocket message processing for part 2
+//var part1 = require('./utils/ws_part1');														//websocket message processing for part 1
+//var part2 = require('./utils/ws_part2');														//websocket message processing for part 2
+var karachainsvc = require('./utils/ws_karachain');	
 var ws = require('ws');																			//websocket mod
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');														//rest based SDK for ibm blockchain
@@ -255,8 +256,7 @@ ibc.load(options, function (err, cc){														//parse/load chaincode, respo
 	}
 	else{
 		chaincode = cc;
-		part1.setup(ibc, cc);																//pass the cc obj to part 1 node code
-		part2.setup(ibc, cc);																//pass the cc obj to part 2 node code
+		karachainsvc.setup(ibc, cc);																//pass the cc obj to part 1 node code															//pass the cc obj to part 2 node code
 
 		// ---- To Deploy or Not to Deploy ---- //
 		if(!cc.details.deployed_name || cc.details.deployed_name === ''){					//yes, go deploy
@@ -337,8 +337,8 @@ function cb_deployed(e){
 				console.log('karachain team2: received ws msg:', message.toString());
 				try{
 					var data = JSON.parse(message);
-					part1.process_msg(ws, data);											//pass the websocket msg to part 1 processing
-					part2.process_msg(ws, data);											//pass the websocket msg to part 2 processing
+					karachainsvc.process_msg(ws, data);											//pass the websocket msg to part 1 processing
+															//pass the websocket msg to part 2 processing
 				}
 				catch(e){
 					console.log('ws message error', e);
