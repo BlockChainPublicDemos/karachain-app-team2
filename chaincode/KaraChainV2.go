@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"regexp"
-	"strconv"
-//	"strings"
-//	"time"
+	//"strconv"
+	//	"strings"
+	//	"time"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
@@ -47,36 +47,37 @@ type SimpleChaincode struct {
 }
 
 //TODO: need to understand how to organize the ledger .. by song, by list of songs per singer or one list of songs by all singers
-var karachainKey = "_allsongsindex"	
+var karachainKey = "_allsongsindex"
+
 //==============================================================================================================================
 //	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Song struct {
-	Song_ID                    string `json:"Song_ID"`
-	Date_created               string `json:"Date_created"`
-	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
-	Singer_Id                  string `json:"Singer_Id"`
-	Singer_Name                string `json:"Singer_Name"`
-	Video_Id                   string `json:"Video_Id"`
-	Owner                      string `json:"Owner"`
-	Video_Link                 string `json:"Video_Link"`
-	Video_date_created         string `json:"Video_date_created"`
-	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
-	Copyright_Id               string `json:"Copyright_Id"`
-	Copyright_date_created     string `json:"Copyright_date_created"`
-	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
-	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
-	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
-	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
-	Copyright_State            string `json:"Copyright_State"`
-	Venue_Id                   string `json:"Venue_Id"`
-	Venue_Name                 string `json:"Venue_Name"`
-	User_Id                    string `json:"User_Id"`
-	User_role                  string `json:"User_role"`
-	User_rating                string `json:"User_role"`
-	Obsolete                   bool   `json:"Obsolete"`
-	Status                     string `json:"Status"`
+	Song_ID string `json:"Song_ID"`
+	//	Date_created               string `json:"Date_created"`
+	//	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
+	//	Singer_Id                  string `json:"Singer_Id"`
+	//	Singer_Name                string `json:"Singer_Name"`
+	//	Video_Id                   string `json:"Video_Id"`
+	//	Owner                      string `json:"Owner"`
+	//	Video_Link                 string `json:"Video_Link"`
+	//	Video_date_created         string `json:"Video_date_created"`
+	//	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
+	//	Copyright_Id               string `json:"Copyright_Id"`
+	//	Copyright_date_created     string `json:"Copyright_date_created"`
+	//	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
+	//	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
+	//	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
+	//	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
+	//	Copyright_State            string `json:"Copyright_State"`
+	//	Venue_Id                   string `json:"Venue_Id"`
+	//	Venue_Name                 string `json:"Venue_Name"`
+	//	User_Id                    string `json:"User_Id"`
+	//	User_role                  string `json:"User_role"`
+	//	User_rating                string `json:"User_rating"`
+	//	Obsolete                   bool   `json:"Obsolete"`
+	//	Status                     string `json:"Status"`
 }
 
 //==============================================================================================================================
@@ -105,43 +106,41 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//Args
 	//				0
 	//			peer_address
-	var Aval int
+	//var Aval int
 	var err error
 	fmt.Printf("INIT: Karachain function: %s ", function)
 	//test chaincode
 	// Initialize the chaincode
-	Aval, err = strconv.Atoi(args[0])
-	if err != nil {
-		return nil, errors.New("Expecting integer value for asset holding")
-	}
+	//	Aval, err = strconv.Atoi(args[0])
+	//	if err != nil {
+	//		return nil, errors.New("Expecting integer value for asset holding")
+	//	}
 
 	// Write the state to the ledger
-	err = stub.PutState("karachain", []byte(strconv.Itoa(Aval)))				//making a test var "karachain", I find it handy to read/write to it right away to test the network
+	err = stub.PutState("karachain", []byte(args[0])) //making a test var "karachain", I find it handy to read/write to it right away to test the network
 	if err != nil {
 		return nil, err
 	}
-	
-	
-	//
-	
-	
-
-	var Song_IDs Song_Holder
-
-	bytes, err := json.Marshal(Song_IDs)
-
-	if err != nil {
-		return nil, errors.New("Error creating initial song placeholders")
-	}
-
-	err = stub.PutState(karachainKey, bytes)
-
-	for i := 0; i < len(args); i = i + 2 {
-		t.add_ecert(stub, args[i], args[i+1])
-	}
-	
-	fmt.Printf("INII: Karachain exit")
 	return nil, nil
+
+	//
+
+	//	var Song_IDs Song_Holder
+	//
+	//	bytes, err := json.Marshal(Song_IDs)
+	//
+	//	if err != nil {
+	//		return nil, errors.New("Error creating initial song placeholders")
+	//	}
+	//
+	//	err = stub.PutState(karachainKey, bytes)
+	//
+	//	for i := 0; i < len(args); i = i + 2 {
+	//		t.add_ecert(stub, args[i], args[i+1])
+	//	}
+	//
+	//	fmt.Printf("INII: Karachain exit")
+	//	return nil, nil
 }
 
 //==============================================================================================================================
@@ -287,11 +286,12 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song)
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	caller, caller_affiliation, err := t.get_caller_data(stub)
-	
+
 	fmt.Printf("INVOKE: Karachain function: %s ", function)
-	
+
 	if err != nil {
-		return nil, errors.New("Error retrieving caller information")
+		fmt.Printf("QUERY: Error retrieving caller details", err)
+		//	return nil, errors.New("Error retrieving caller information")
 	}
 
 	if function == "create_song" { // we create a song from scratch
@@ -333,12 +333,12 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-//TODO add in authentication and certificate management
+	//TODO add in authentication and certificate management
 	caller, caller_affiliation, err := t.get_caller_data(stub)
 	if err != nil {
 		fmt.Printf("QUERY: Error retrieving caller details", err)
-	    return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
-	    }
+		//			return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+	}
 
 	fmt.Println("query is running " + function)
 
@@ -361,7 +361,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	//		return t.ping(stub)
 	//	}
 
-/**TODO  leave out for now */
+	/**TODO  leave out for now */
 	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
 		if len(args) != 1 {
 			fmt.Printf("Incorrect number of arguments passed")
@@ -385,12 +385,13 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.get_ecert(stub, args[0])
 	} else if function == "ping" {
 		return t.ping(stub)
-	} else if function == "read" {													//read a variable
+	} else if function == "read" { //read a variable
 		return t.read(stub, args)
-	 }
+	}
 	return nil, errors.New("Received unknown function invocation " + function)
 
 }
+
 // ============================================================================================================================
 // Read - read a variable from chaincode state
 // ============================================================================================================================
@@ -403,14 +404,15 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 	}
 
 	name = args[0]
-	valAsbytes, err := stub.GetState(name)									//get the var from chaincode state
+	valAsbytes, err := stub.GetState(name) //get the var from chaincode state
 	if err != nil {
 		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
 		return nil, errors.New(jsonResp)
 	}
 
-	return valAsbytes, nil													//send it onward
+	return valAsbytes, nil //send it onward
 }
+
 //=================================================================================================================================
 //	 Ping Function
 //=================================================================================================================================
@@ -428,33 +430,37 @@ func (t *SimpleChaincode) ping(stub shim.ChaincodeStubInterface) ([]byte, error)
 func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, Song_ID_r string) ([]byte, error) {
 	var s Song
 
-	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
-	Date_created := "\"Date_created\":\"UNDEFINED\", "
-	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":0, "
-	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
-	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
-	Video_Id := "\"Video_Id \":\"UNDEFINED\", "
-	owner := "\"Owner\":\"" + caller + "\", "
-	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
-	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
-	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\", "
-	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\""
-	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\""
-	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\""
-	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\""
-	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\""
-	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\""
-	Copyright_State := "\"Copyright_State\":\"UNDEFINED\""
-	Venue_Id := "\"Venue_Id\":\"UNDEFINED\""
-	Venue_Name := "\"Venue_Name\":\"UNDEFINED\""
-	User_Id := "\"User_Id\":\"UNDEFINED\""
-	User_role := "\"User_role\":\"UNDEFINED\""
-	Obsolete := "\"Obsolete\":\"False\""
-	Status := "\"Status\":\"False\""
+	Song_ID := "\"Song_ID\":\"UNDEFINED\"" // Variables to define the JSON
+	//	Date_created := "\"Date_created\":\"UNDEFINED\", "
+	//	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
+	//	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
+	//	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
+	//	Video_Id := "\"Video_Id\":\"UNDEFINED\", "
+	//	Owner := "\"Owner\":\"UNDEFINED\", "
+	//	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
+	//	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
+	//	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\", "
+	//	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\""
+	//	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
+	//	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
+	//	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
+	//	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
+	//	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
+	//	Copyright_State := "\"Copyright_State\":\"UNDEFINED\", "
+	//	Venue_Id := "\"Venue_Id\":\"UNDEFINED\", "
+	//	Venue_Name := "\"Venue_Name\":\"UNDEFINED\", "
+	//	User_Id := "\"User_Id\":\"UNDEFINED\", "
+	//	User_role := "\"User_role\":\"UNDEFINED\", "
+	//	User_rating := "\"User_rating\":\"UNDEFINED\", "
+	//	Obsolete := "\"Obsolete\":false, "
+	//	Status := "\"Status\":\"UNDEFINED\""
 
-	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + owner + Video_Link + Video_date_created + Video_QR_code_Id +
-		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
-		Venue_Id + Venue_Name + Copyright_Institution_Name + User_Id + User_role + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+	//	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id +
+	//		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
+	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+
+	fmt.Printf("Song ID is %s", Song_ID_r)
+	Song_json := "{" + Song_ID + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
@@ -472,6 +478,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	err = json.Unmarshal([]byte(Song_json), &s) // Convert the JSON defined above into a Song object for go
 
 	if err != nil {
+		fmt.Printf("Invalid JSON object. Error is : %s", err)
 		return nil, errors.New("Invalid JSON object")
 	}
 
@@ -482,7 +489,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	}
 
 	if caller_affiliation != SINGER { // Only the singer can create a new Song
-		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
+		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
+		//		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
 	}
 
 	//saves the song as a unique object in the ledger identified by song id (putstate)
@@ -707,19 +715,19 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 //=================================================================================================================================
 func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
-	var err error
-	if s.Obsolete == true {
-
-		return nil, errors.New(fmt.Sprintf("Song is obsolete and cannot be updated. %v", s.Obsolete))
-
-	}
-
-	_, err = t.save_changes(stub, s) // Save the changes in the blockchain
-
-	if err != nil {
-		fmt.Printf("UPDATE_SONG: Error saving changes: %s", err)
-		return nil, errors.New("Error saving changes")
-	}
+	//	var err error
+	//	if s.Obsolete == true {
+	//
+	//		return nil, errors.New(fmt.Sprintf("Song is obsolete and cannot be updated. %v", s.Obsolete))
+	//
+	//	}
+	//
+	//	_, err = t.save_changes(stub, s) // Save the changes in the blockchain
+	//
+	//	if err != nil {
+	//		fmt.Printf("UPDATE_SONG: Error saving changes: %s", err)
+	//		return nil, errors.New("Error saving changes")
+	//	}
 
 	return nil, nil
 
@@ -890,20 +898,22 @@ func (t *SimpleChaincode) update_rating(stub shim.ChaincodeStubInterface, s Song
 //=================================================================================================================================
 func (t *SimpleChaincode) song_obsolete(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
 
-	if s.Obsolete != true {
+	//	if s.Obsolete != true {
+	//
+	//		return nil, errors.New("Cannot make song obsolete")
+	//	} else {
+	//		_, err := t.save_changes(stub, s)
+	//
+	//		if err != nil {
+	//			fmt.Printf("SONG_OBSOLETE: Error saving changes: %s", err)
+	//			return nil, errors.New("SONG_OBSOLETE: Error saving changes")
+	//		} else {
+	//			return nil, nil
+	//
+	//		}
+	//	}
 
-		return nil, errors.New("Cannot make song obsolete")
-	} else {
-		_, err := t.save_changes(stub, s)
-
-		if err != nil {
-			fmt.Printf("SONG_OBSOLETE: Error saving changes: %s", err)
-			return nil, errors.New("SONG_OBSOLETE: Error saving changes")
-		} else {
-			return nil, nil
-
-		}
-	}
+	return nil, nil
 }
 
 //=================================================================================================================================
