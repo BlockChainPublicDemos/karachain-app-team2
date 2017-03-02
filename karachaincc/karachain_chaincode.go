@@ -324,6 +324,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	fmt.Println("query is running " + function)
 	//TODO add in authentication and certificate management
 	caller, caller_affiliation, err := t.get_caller_data(stub)
+	fmt.Println("query get caller: %s %s",caller,caller_affiliation)		
 	if err != nil {
 		fmt.Printf("QUERY: Error retrieving caller details", err)
 		//			return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
