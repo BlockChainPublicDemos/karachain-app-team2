@@ -102,7 +102,7 @@ type User_and_eCert struct {
 //==============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	var Aval int
+//	var Aval int
 	var err error
 
 	if len(args) != 1 {
@@ -110,16 +110,25 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 
 	// Initialize the chaincode
+	/**
 	Aval, err = strconv.Atoi(args[0])
 	if err != nil {
 		return nil, errors.New("Expecting integer value for asset holding")
 	}
+	*/
 
 	// Write the state to the ledger
+	/**
 	err = stub.PutState("karachain", []byte(strconv.Itoa(Aval)))				//making a test var "karachain", I find it handy to read/write to it right away to test the network
 	if err != nil {
 		return nil, err
 	}
+	*/
+	err = stub.PutState("karachain", []byte(args[0])) //making a test var "karachain", I find it handy to read/write to it right away to test the network
+	if err != nil {
+		return nil, err
+	}
+	
 	return nil, nil
 }
 
@@ -313,7 +322,13 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	fmt.Println("query is running " + function)
-
+	//TODO add in authentication and certificate management
+	caller, caller_affiliation, err := t.get_caller_data(stub)
+	if err != nil {
+		fmt.Printf("QUERY: Error retrieving caller details", err)
+		//			return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+	}
+	
 	// Handle different functions
 	if function == "read" {													//read a variable
 		return t.read(stub, args)
