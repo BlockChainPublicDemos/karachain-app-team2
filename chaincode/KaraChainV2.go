@@ -333,11 +333,11 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	//TODO add in authentication and certificate management
-	caller, caller_affiliation, err := t.get_caller_data(stub)
-	if err != nil {
-		fmt.Printf("QUERY: Error retrieving caller details", err)
-		return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
-	}
+	//	caller, caller_affiliation, err := t.get_caller_data(stub)
+	//	if err != nil {
+	//		fmt.Printf("QUERY: Error retrieving caller details", err)
+	//		return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
+	//	}
 
 	fmt.Println("query is running " + function)
 
