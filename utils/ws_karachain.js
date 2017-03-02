@@ -26,8 +26,10 @@ module.exports.process_msg = function(ws, data){
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain: create performance - singer singing song');
+			var qr_png = qr.image('performance', { type: 'png' });
+			var songId = "sb1234567";
 			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new marble
 			}
 		}
 		else if(data.type == 'createvisitor'){

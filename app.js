@@ -26,6 +26,7 @@ var url = require('url');
 var setup = require('./setup');
 var fs = require('fs');
 var cors = require('cors');
+var qr = require('qr-image');
 
 //// Set Server Parameters ////
 var host = setup.SERVER.HOST;
