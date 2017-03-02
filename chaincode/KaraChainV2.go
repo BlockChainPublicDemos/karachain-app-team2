@@ -432,7 +432,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 
 	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	Date_created := "\"Date_created\":\"UNDEFINED\", "
-	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":0, "
+	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
 	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
 	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
 	Video_Id := "\"Video_Id\":\"UNDEFINED\", "
@@ -459,6 +459,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
 		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
+	fmt.Printf("Song ID is %s", Song_ID_r)
 	//	Song_json := "{" + Song_ID + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
