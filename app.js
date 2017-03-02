@@ -234,7 +234,7 @@ var options = 	{
 //						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
 //						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'
 							zip_url: 'https://github.com/sbedoll/chaincode-marbles/archive/master.zip',		//karachain repo archive
-							unzip_dir: 'chaincode-marbles/chaincode',													//subdirectroy name of chaincode after unzipped
+							unzip_dir: 'chaincode-marbles-master/chaincode',													//subdirectroy name of chaincode after unzipped
 							git_url: 'https://github.com/sbedoll/chaincode-marbles/chaincode'//karachain repo
 					
 						//hashed cc name from prev deployment, comment me out to always deploy, uncomment me when its already deployed to skip deploying again
