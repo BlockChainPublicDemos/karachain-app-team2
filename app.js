@@ -274,7 +274,8 @@ function check_if_deployed(e, attempt){
 		cb_deployed(e);																		//looks like an error pass it along
 	}
 	else if(attempt >= 15){																	//tried many times, lets give up and pass an err msg
-		console.log('[preflight check]', attempt, ': failed too many times, giving up');
+		console.log('[preflight check]', attempt, ': failed too many times, giving up .. ');
+		
 		var msg = 'chaincode is taking an unusually long time to start. this sounds like a network error, check peer logs';
 		if(!process.error) process.error = {type: 'deploy', msg: msg};
 		cb_deployed(msg);
@@ -293,12 +294,16 @@ function check_if_deployed(e, attempt){
 						if(json.constructor === Array) cc_deployed = true;					//looks alright, we have marbles
 					}
 				}
+				chaincode.invoke.ping([]);
+				console.log('back from ping');
+
 			}
 			catch(e){}																		//anything nasty goes here
 
 			// ---- Are We Ready? ---- //
 			if(!cc_deployed){
-				console.log('[preflight check]', attempt, ': failed, trying again');
+				console.log('[preflight check]', attempt, ': failed, trying again and ping it');
+				
 				setTimeout(function(){
 					check_if_deployed(null, ++attempt);										//no, try again later
 				}, 10000);
