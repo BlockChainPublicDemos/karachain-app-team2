@@ -330,13 +330,42 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		//			return nil, errors.New("QUERY: Error retrieving caller details: " + err.Error())
 	}
 	
-	// Handle different functions
-	if function == "read" {													//read a variable
+	logger.Debug("function: ", function)
+	logger.Debug("caller: ", caller)
+	logger.Debug("affiliation: ", caller_affiliation)
+	
+	/**TODO  leave out for now */
+	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
+		if len(args) != 1 {
+			fmt.Printf("Incorrect number of arguments passed")
+			return nil, errors.New("QUERY: Incorrect number of arguments passed")
+		}
+		s, err := t.retrieve_Song_ID(stub, args[0])
+		if err != nil {
+			fmt.Printf("QUERY: Error retrieving Song: %s", err)
+			return nil, errors.New("QUERY: Error retrieving Song " + err.Error())
+		}
+		return t.get_song_details(stub, s, caller, caller_affiliation)
+	} else if function == "Get_Rating" {
+		return t.get_rating(stub, args[0], caller, caller_affiliation) // A user should be able to get his own rating that was made in the past for a particular song
+	} else if function == "Get_Contract" { // Only allowed for singer or copyright authority to see the latest contract
+		return t.get_contract(stub, args[0], caller, caller_affiliation)
+	} else if function == "Get_overall_Rating" { //Anybody should be able to see the overall (average) rating of a song
+		return t.get_overall_rating(stub, args[0], caller, caller_affiliation)
+	} else if function == "Get_Songs" {
+		return t.get_songs(stub, caller, caller_affiliation)
+	} else if function == "get_ecert" {
+		return t.get_ecert(stub, args[0])
+	} else if function == "ping" {
+		return t.ping(stub)
+	} else if function == "read" { //read a variable
 		return t.read(stub, args)
 	}
+	
+
 	fmt.Println("query did not find func: " + function)						//error
 
-	return nil, errors.New("Received unknown function query")
+	return nil, errors.New("Received unknown function invocation " + function)	
 
 }
 // ============================================================================================================================
