@@ -121,7 +121,6 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
 
 	//
 
@@ -514,7 +513,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Song_IDs Song_Holder // Not sure what this holder means. Need to check
+	var Song_IDs Song_Holder // Hold an array of song IDs
 
 	err = json.Unmarshal(bytes, &Song_IDs)
 
