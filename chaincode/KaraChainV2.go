@@ -478,7 +478,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	err = json.Unmarshal([]byte(Song_json), &s) // Convert the JSON defined above into a Song object for go
 
 	if err != nil {
-		return nil, errors.New("Invalid JSON object. Error is %s", err)
+		fmt.Printf("Invalid JSON object. Error is : %s", err)
+		return nil, errors.New("Invalid JSON object")
 	}
 
 	record, err := stub.GetState(s.Song_ID) // If not an error then a record exists so cant create a new car with this Song_ID as it must be unique
