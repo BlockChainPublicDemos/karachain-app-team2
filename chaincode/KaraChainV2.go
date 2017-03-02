@@ -121,19 +121,23 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	if err != nil {
 		return nil, err
 	}
+
+	//
+
+	var Song_IDs Song_Holder
+
+	bytes, err := json.Marshal(Song_IDs)
+
+	if err != nil {
+		return nil, errors.New("Error creating initial song placeholders")
+	}
+
+	err = stub.PutState(karachainKey, bytes)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 
-	//
-
-	//	var Song_IDs Song_Holder
-	//
-	//	bytes, err := json.Marshal(Song_IDs)
-	//
-	//	if err != nil {
-	//		return nil, errors.New("Error creating initial song placeholders")
-	//	}
-	//
-	//	err = stub.PutState(karachainKey, bytes)
 	//
 	//	for i := 0; i < len(args); i = i + 2 {
 	//		t.add_ecert(stub, args[i], args[i+1])
@@ -509,7 +513,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Song_IDs Song_Holder // Not sure what this holder means. Need to check
+	var Song_IDs Song_Holder // Hold an array of song IDs
 
 	err = json.Unmarshal(bytes, &Song_IDs)
 
