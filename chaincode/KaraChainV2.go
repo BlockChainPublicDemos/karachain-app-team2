@@ -290,7 +290,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	fmt.Printf("INVOKE: Karachain function: %s ", function)
 
 	if err != nil {
-		return nil, errors.New("Error retrieving caller information")
+		fmt.Printf("QUERY: Error retrieving caller details", err)
+		//	return nil, errors.New("Error retrieving caller information")
 	}
 
 	if function == "create_song" { // we create a song from scratch
@@ -483,7 +484,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	}
 
 	if caller_affiliation != SINGER { // Only the singer can create a new Song
-		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
+		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
+		//		return nil, errors.New(fmt.Sprintf("Permission Denied. create_song. %v === %v", caller_affiliation, SINGER))
 	}
 
 	//saves the song as a unique object in the ledger identified by song id (putstate)
