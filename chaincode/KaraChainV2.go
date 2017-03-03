@@ -54,11 +54,11 @@ var karachainKey = "_allsongsindex"
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Song struct {
-	Song_ID string `json:"Song_ID"`
-	//	Date_created               string `json:"Date_created"`
-	//	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
-	//	Singer_Id                  string `json:"Singer_Id"`
-	//	Singer_Name                string `json:"Singer_Name"`
+	Song_ID                 string `json:"Song_ID"`
+	Date_created            string `json:"Date_created"`
+	SmartContract_Unique_ID string `json:"SmartContract_Unique_ID"`
+	Singer_Id               string `json:"Singer_Id"`
+	Singer_Name             string `json:"Singer_Name"`
 	//	Video_Id                   string `json:"Video_Id"`
 	//	Owner                      string `json:"Owner"`
 	//	Video_Link                 string `json:"Video_Link"`
