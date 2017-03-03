@@ -1,56 +1,57 @@
 // ==================================
-// Part 1 - incoming messages, look for type
+// karachain - incoming messages, look for type
 // ==================================
 var ibc = {};
 var chaincode = {};
 var async = require('async');
 
 module.exports.setup = function(sdk, cc){
+	console.log("karachain setup");
 	ibc = sdk;
 	chaincode = cc;
 };
 
 module.exports.process_msg = function(ws, data){
-	console.log('karachain: process message ',data.type);
+	console.log('karachain svc: process message ',data.type);
 	if(data.v === 1){																						//only look at messages for part 1
 	    if(data.type == 'createsinger'){
-			console.log('karachain: create a song');
+			console.log('karachain svc: create a singer');
 			if(data.name && data.color && data.size && data.user){
 				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new singer
 			}
 		}
 		else if(data.type == 'createperformance'){
-			console.log('karachain: create performance - singer singing song');
+			console.log('karachain svc: create performance - singer singing song');
 			var qr_png = qr.image('performance', { type: 'png' });
 			var songId = "sb1234567";
 			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
-			console.log('karachain: create performance - reading song back ',sondId);
+			console.log('karachain svc: create performance - reading song back ',sondId);
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',sondId);
 		}
 		else if(data.type == 'createvisitor'){
-			console.log('karachain: create visitor');
+			console.log('karachain svc: create visitor');
 			
 		}
 		else if(data.type == 'createeventmgr'){
-			console.log('karachain: create event mgr');
+			console.log('karachain svc: create event mgr');
 			
 		} 
 		else if(data.type == 'voteperformance'){
-			console.log('karachain: vote performance');
+			console.log('karachain svc: vote performance');
 			
 		}
 		else if(data.type == 'getmyperformances'){
-			console.log('karachain: get my performances');
+			console.log('karachain svc: get my performances');
 			chaincode.query.read(['_allsongsindex'], cb_got_index);
 			
 		}
 		else if(data.type == 'getmyoffers'){
-			console.log('karachain: get my offers');
+			console.log('karachain svc: get my offers');
 			
 		}
 		else if(data.type == 'acceptoffer'){
-			console.log('karachain: accept offer');
+			console.log('karachain svc: accept offer');
 			
 		}
 		else if(data.type == 'transfer'){

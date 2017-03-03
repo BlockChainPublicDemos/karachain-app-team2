@@ -298,9 +298,9 @@ function check_if_deployed(e, attempt){
 						if(json.constructor === Array) cc_deployed = true;					//looks alright, we have songs
 					}
 				}
-				chaincode.invoke.ping([]);
-				chaincode.invoke.create_song(["sb0123456"]);	//create a new song		
-				console.log('back from ping');
+				//chaincode.invoke.ping([]);
+				//chaincode.invoke.create_song(["sb0123456"]);	//create a new song		
+				//console.log('back from ping');
 
 			}
 			catch(e){}																		//anything nasty goes here
