@@ -13,13 +13,7 @@ module.exports.setup = function(sdk, cc){
 module.exports.process_msg = function(ws, data){
 	console.log('karachain: process message ',data.type);
 	if(data.v === 1){																						//only look at messages for part 1
-		if(data.type == 'create'){
-			console.log('karachain: create a song');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
-		}
-		else if(data.type == 'createsinger'){
+		if(data.type == 'createsinger'){
 			console.log('karachain: create a song');
 			if(data.name && data.color && data.size && data.user){
 				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
@@ -27,47 +21,36 @@ module.exports.process_msg = function(ws, data){
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain: create performance - singer singing song');
-			var qr_png = qr.image('performance', { type: 'png' });
 			var songId = "sb1234567";
+			var qr_png = qr.image("singer"+songId, { type: 'png' });
 			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new marble
+				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new performance
+				queryAPI(songId); //read back asset
 			}
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain: create visitor');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'createeventmgr'){
 			console.log('karachain: create event mgr');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		} 
 		else if(data.type == 'voteperformance'){
 			console.log('karachain: vote performance');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'getmyperformances'){
 			console.log('karachain: get my performances');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'getmyoffers'){
 			console.log('karachain: get my offers');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'acceptoffer'){
 			console.log('karachain: accept offer');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'get'){
 			console.log('get marbles msg');
@@ -157,5 +140,22 @@ module.exports.process_msg = function(ws, data){
 				console.log('[ws error] could not send msg', e);
 			}
 		}
+	}
+	//query ledger
+	function queryAPI(asset){
+		chaincode.query.read([asset], function(err, resp){
+			
+			try{
+				if(err == null){	
+				    if(resp === 'null') console.log("query returned no asset")									//looks alright, brand new, no marbles yet;
+					else{
+						var json = JSON.parse(resp);
+						if(json.constructor === Array) console.log("query returned asset ",resp);					//looks alright, we have marbles
+					}
+				}
+			}
+			catch(e){console.log("query asset error ",e);}																		//anything nasty goes here
+
+		});
 	}
 };
