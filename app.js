@@ -261,7 +261,7 @@ ibc.load(options, function (err, cc){														//parse/load chaincode, respo
 
 		// ---- To Deploy or Not to Deploy ---- //
 		if(!cc.details.deployed_name || cc.details.deployed_name === ''){					//yes, go deploy
-			cc.deploy('init', ['99'], {delay_ms: 120000}, function(e){ 						//delay_ms is milliseconds to wait after deploy for conatiner to start, 50sec recommended
+			cc.deploy('init', ['99'], {delay_ms: 60000}, function(e){ 						//delay_ms is milliseconds to wait after deploy for conatiner to start, 50sec recommended
 				check_if_deployed(e, 1);
 			});
 		}
@@ -299,6 +299,7 @@ function check_if_deployed(e, attempt){
 					}
 				}
 				chaincode.invoke.ping([]);
+				chaincode.invoke.create_song(["sb0123456"]);	//create a new song		
 				console.log('back from ping');
 
 			}

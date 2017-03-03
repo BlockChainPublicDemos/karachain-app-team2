@@ -23,11 +23,10 @@ module.exports.process_msg = function(ws, data){
 			console.log('karachain: create performance - singer singing song');
 			var qr_png = qr.image('performance', { type: 'png' });
 			var songId = "sb1234567";
-			if(data.name ){
-				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new song
-			}
+			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
 			console.log('karachain: create performance - reading song back ',sondId);
 			chaincode.query.read([songId], cb_query_response);
+			console.log('karachain: create performance - submitted song query ',sondId);
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain: create visitor');
@@ -96,9 +95,9 @@ module.exports.process_msg = function(ws, data){
 			}
 		}
 	}
-	
+	//invoke call back
 	function cb_invoked(e, a){
-		console.log('response: ', e, a);
+		console.log('invoke response: ', e, a);
 	}
 	//cc query callback
 	function cb_query_response(e, resonse){
