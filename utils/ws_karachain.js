@@ -11,6 +11,7 @@ module.exports.setup = function(sdk, cc){
 };
 
 module.exports.process_msg = function(ws, data){
+	console.log('karachain: process message ',data.type);
 	if(data.v === 1){																						//only look at messages for part 1
 		if(data.type == 'create'){
 			console.log('karachain: create a song');

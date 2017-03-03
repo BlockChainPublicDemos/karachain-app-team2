@@ -335,10 +335,12 @@ function cb_deployed(e){
 		wss = new ws.Server({server: server});												//start the websocket now
 		wss.on('connection', function connection(ws) {
 			ws.on('message', function incoming(message) {
-				console.log('karachain team2: received ws msg:', message.toString());
+				console.log('karachain team2: received ws msg:' , message.toString());
 				try{
 					var data = JSON.parse(message);
-					karachainsvc.process_msg(ws, data);											//pass the websocket msg to part 1 processing
+					console.log('karachain team2: processing:', data.type);
+					karachainsvc.process_msg(ws, data);		
+					console.log('karachain team2: processed message ');//pass the websocket msg to part 1 processing
 															//pass the websocket msg to part 2 processing
 				}
 				catch(e){
@@ -369,8 +371,7 @@ function cb_deployed(e){
 				console.log('hey new block, lets refresh and broadcast to all', chain_stats.height-1);
 				ibc.block_stats(chain_stats.height - 1, cb_blockstats);
 				wss.broadcast({msg: 'reset'});
-				chaincode.query.read(['_marbleindex'], cb_got_index);
-				chaincode.query.read(['_opentrades'], cb_got_trades);
+				chaincode.query.read(['karachain'], cb_got_index);
 			}
 			
 			//got the block's stats, lets send the statistics
@@ -414,20 +415,20 @@ function cb_deployed(e){
 			}
 			
 			//call back for getting open trades, lets send the trades
-			function cb_got_trades(e, trades){
-				if(e != null) console.log('trade error:', e);
-				else {
-					try{
-						trades = JSON.parse(trades);
-						if(trades && trades.open_trades){
-							wss.broadcast({msg: 'open_trades', open_trades: trades.open_trades});
-						}
-					}
-					catch(e){
-						console.log('trade msg error', e);
-					}
-				}
-			}
+//			function cb_got_trades(e, trades){
+//				if(e != null) console.log('trade error:', e);
+//				else {
+//					try{
+//						trades = JSON.parse(trades);
+//						if(trades && trades.open_trades){
+//							wss.broadcast({msg: 'open_trades', open_trades: trades.open_trades});
+//						}
+//					}
+//					catch(e){
+//						console.log('trade msg error', e);
+//					}
+//				}
+//			}
 		});
 	}
 }
