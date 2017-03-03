@@ -435,7 +435,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	var s Song
 
 	//Song_ID := "\"Song_ID\":\"UNDEFINED\"" // Variables to define the JSON
-	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\"" // Variables to define the JSON
+	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	Date_created := "\"Date_created\":\"UNDEFINED\", "
 	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
 	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
