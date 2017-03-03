@@ -54,9 +54,9 @@ var karachainKey = "_allsongsindex"
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Song struct {
-	Song_ID      string `json:"Song_ID"`
-	Date_created string `json:"Date_created"`
-	//SmartContract_Unique_ID string `json:"SmartContract_Unique_ID"`
+	Song_ID                 string `json:"Song_ID"`
+	Date_created            string `json:"Date_created"`
+	SmartContract_Unique_ID string `json:"SmartContract_Unique_ID"`
 	//Singer_Id               string `json:"Singer_Id"`
 	//Singer_Name             string `json:"Singer_Name"`
 	//	Video_Id                   string `json:"Video_Id"`
@@ -437,8 +437,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	//	Date_created := "\"Date_created\":\"UNDEFINED\""
 	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
-	Date_created := "\"Date_created\":\"UNDEFINED\""
-	//SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
+	Date_created := "\"Date_created\":\"UNDEFINED\", "
+	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\""
 	//Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
 	//Singer_Name := "\"Singer_Name\":\"UNDEFINED\""
 	//	Video_Id := "\"Video_Id\":\"UNDEFINED\", "
@@ -466,7 +466,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	fmt.Printf("Song ID is %s", Song_ID_r)
-	Song_json := "{" + Song_ID + Date_created + "}" // Concatenates the variables to create the total JSON object
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
