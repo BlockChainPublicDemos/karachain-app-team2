@@ -143,6 +143,7 @@ module.exports.process_msg = function(ws, data){
 	}
 	//query ledger
 	function queryAPI(asset){
+		console.log("query asset ",asset);
 		chaincode.query.read([asset], function(err, resp){
 			
 			try{
