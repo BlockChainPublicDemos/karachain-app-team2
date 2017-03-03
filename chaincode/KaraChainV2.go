@@ -433,13 +433,11 @@ func (t *SimpleChaincode) ping(stub shim.ChaincodeStubInterface) ([]byte, error)
 //=================================================================================================================================
 func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, Song_ID_r string) ([]byte, error) {
 	var s Song
-
 	//Song_ID := "\"Song_ID\":\"UNDEFINED\"" // Variables to define the JSON
 	//	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	//	Date_created := "\"Date_created\":\"UNDEFINED\""
-	Song_ID := Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
+	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	Date_created := "\"Date_created\":\"UNDEFINED\""
-
 	//SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
 	//Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
 	//Singer_Name := "\"Singer_Name\":\"UNDEFINED\""
