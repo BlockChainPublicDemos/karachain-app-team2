@@ -292,10 +292,10 @@ function check_if_deployed(e, attempt){
 				if(err == null){	
 					cc_deployed = true; //good enough for now
 					//no errors is good, but can't trust that alone
-					if(resp === 'null') cc_deployed = true;									//looks alright, brand new, no marbles yet
+					if(resp === 'null') cc_deployed = true;									//looks alright, brand new, no songs yet
 					else{
 						var json = JSON.parse(resp);
-						if(json.constructor === Array) cc_deployed = true;					//looks alright, we have marbles
+						if(json.constructor === Array) cc_deployed = true;					//looks alright, we have songs
 					}
 				}
 				chaincode.invoke.ping([]);
@@ -384,32 +384,32 @@ function cb_deployed(e){
 				}
 			}
 			
-			//got the marble index, lets get each marble
+			//got the song index, lets get each song
 			function cb_got_index(e, index){
-				if(e != null) console.log('marble index error:', e);
+				if(e != null) console.log('karachain index error:', e);
 				else{
 					try{
 						var json = JSON.parse(index);
 						for(var i in json){
 							console.log('!', i, json[i]);
-							chaincode.query.read([json[i]], cb_got_marble);					//iter over each, read their values
+							chaincode.query.read([json[i]], cb_got_song);					//iter over each, read their values
 						}
 					}
 					catch(e){
-						console.log('marbles index msg error:', e);
+						console.log('song index msg error:', e);
 					}
 				}
 			}
 			
-			//call back for getting a marble, lets send a message
-			function cb_got_marble(e, marble){
-				if(e != null) console.log('marble error:', e);
+			//call back for getting a song, lets send a message
+			function cb_got_song(e, song){
+				if(e != null) console.log('song error:', e);
 				else {
 					try{
-						wss.broadcast({msg: 'marbles', marble: JSON.parse(marble)});
+						wss.broadcast({msg: 'song', song: JSON.parse(song)});
 					}
 					catch(e){
-						console.log('marble msg error', e);
+						console.log('song msg error', e);
 					}
 				}
 			}

@@ -13,77 +13,53 @@ module.exports.setup = function(sdk, cc){
 module.exports.process_msg = function(ws, data){
 	console.log('karachain: process message ',data.type);
 	if(data.v === 1){																						//only look at messages for part 1
-		if(data.type == 'create'){
+	    if(data.type == 'createsinger'){
 			console.log('karachain: create a song');
 			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
-		}
-		else if(data.type == 'createsinger'){
-			console.log('karachain: create a song');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
+				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new singer
 			}
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain: create performance - singer singing song');
 			var qr_png = qr.image('performance', { type: 'png' });
 			var songId = "sb1234567";
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new marble
+			if(data.name ){
+				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new song
 			}
+			chaincode.query.read([songId], cb_query_response);
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain: create visitor');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'createeventmgr'){
 			console.log('karachain: create event mgr');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		} 
 		else if(data.type == 'voteperformance'){
 			console.log('karachain: vote performance');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'getmyperformances'){
 			console.log('karachain: get my performances');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			chaincode.query.read(['_allsongsindex'], cb_got_index);
+			
 		}
 		else if(data.type == 'getmyoffers'){
 			console.log('karachain: get my offers');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
+			
 		}
 		else if(data.type == 'acceptoffer'){
 			console.log('karachain: accept offer');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_marble([data.name, data.color, data.size, data.user], cb_invoked);	//create a new marble
-			}
-		}
-		else if(data.type == 'get'){
-			console.log('get marbles msg');
-			chaincode.query.read(['_marbleindex'], cb_got_index);
+			
 		}
 		else if(data.type == 'transfer'){
 			console.log('transfering msg');
-			if(data.name && data.user){
-				chaincode.invoke.set_user([data.name, data.user]);
-			}
+			
 		}
 		else if(data.type == 'remove'){
 			console.log('removing msg');
-			if(data.name){
-				chaincode.invoke.delete([data.name]);
-			}
+		
 		}
 		else if(data.type == 'chainstats'){
 			console.log('chainstats msg');
@@ -91,9 +67,9 @@ module.exports.process_msg = function(ws, data){
 		}
 	}
 
-	//got the marble index, lets get each marble
+	//got the songs index, lets get each song
 	function cb_got_index(e, index){
-		if(e != null) console.log('[ws error] did not get marble index:', e);
+		if(e != null) console.log('[ws error] did not get song index:', e);
 		else{
 			try{
 				var json = JSON.parse(index);
@@ -103,10 +79,10 @@ module.exports.process_msg = function(ws, data){
 				//serialized version
 				async.eachLimit(keys, concurrency, function(key, cb) {
 					console.log('!', json[key]);
-					chaincode.query.read([json[key]], function(e, marble) {
-						if(e != null) console.log('[ws error] did not get marble:', e);
+					chaincode.query.read([json[key]], function(e, song) {
+						if(e != null) console.log('[ws error] did not get song:', e);
 						else {
-							if(marble) sendMsg({msg: 'marbles', e: e, marble: JSON.parse(marble)});
+							if(song) sendMsg({msg: 'songs', e: e, song: JSON.parse(song)});
 							cb(null);
 						}
 					});
@@ -123,7 +99,16 @@ module.exports.process_msg = function(ws, data){
 	function cb_invoked(e, a){
 		console.log('response: ', e, a);
 	}
-	
+	//cc query callback
+	function cb_query_response(e, resonse){
+		if(e != null) {
+			console.log('[query error] did not get query response:', e);
+		}else{
+			if (resonse != null){
+				console.log('[query resonse] got query response:', response);
+			}
+		}
+	}
 	//call back for getting the blockchain stats, lets get the block stats now
 	function cb_chainstats(e, chain_stats){
 		if(chain_stats && chain_stats.height){
@@ -146,7 +131,6 @@ module.exports.process_msg = function(ws, data){
 			});
 		}
 	}
-	
 	//send a message, socket might be closed...
 	function sendMsg(json){
 		if(ws){
