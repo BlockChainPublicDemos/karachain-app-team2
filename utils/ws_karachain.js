@@ -26,6 +26,7 @@ module.exports.process_msg = function(ws, data){
 			if(data.name ){
 				chaincode.invoke.create_song([songId, qr_png], cb_invoked);	//create a new song
 			}
+			console.log('karachain: create performance - reading song back ',sondId);
 			chaincode.query.read([songId], cb_query_response);
 		}
 		else if(data.type == 'createvisitor'){
@@ -106,6 +107,8 @@ module.exports.process_msg = function(ws, data){
 		}else{
 			if (resonse != null){
 				console.log('[query resonse] got query response:', response);
+			}else{
+				console.log('[query resonse] NULL query response:');
 			}
 		}
 	}
