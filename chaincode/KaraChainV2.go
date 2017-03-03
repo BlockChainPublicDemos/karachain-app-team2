@@ -471,7 +471,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
 
 	if err != nil {
-		fmt.Printf("cREATE_Song: Invalid Song_ID: %s", err)
+		fmt.Printf("CREATE_Song: Invalid Song_ID: %s", err)
 		return nil, errors.New("Invalid Song_ID")
 	}
 
