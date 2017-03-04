@@ -54,23 +54,23 @@ var karachainKey = "_allsongsindex"
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Song struct {
-	Song_ID                 string `json:"Song_ID"`
-	Date_created            string `json:"Date_created"`
-	SmartContract_Unique_ID string `json:"SmartContract_Unique_ID"`
-	Singer_Id               string `json:"Singer_Id"`
-	Singer_Name             string `json:"Singer_Name"`
-	Video_Id                string `json:"Video_Id"`
-	Owner                   string `json:"Owner"`
-	Video_Link              string `json:"Video_Link"`
-	Video_date_created      string `json:"Video_date_created"`
-	Video_QR_code_Id        string `json:"Video_QR_code_Id"`
-	//	Copyright_Id               string `json:"Copyright_Id"`
-	//	Copyright_date_created     string `json:"Copyright_date_created"`
-	//	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
-	//	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
-	//	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
-	//	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
-	//	Copyright_State            string `json:"Copyright_State"`
+	Song_ID                    string `json:"Song_ID"`
+	Date_created               string `json:"Date_created"`
+	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
+	Singer_Id                  string `json:"Singer_Id"`
+	Singer_Name                string `json:"Singer_Name"`
+	Video_Id                   string `json:"Video_Id"`
+	Owner                      string `json:"Owner"`
+	Video_Link                 string `json:"Video_Link"`
+	Video_date_created         string `json:"Video_date_created"`
+	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
+	Copyright_Id               string `json:"Copyright_Id"`
+	Copyright_date_created     string `json:"Copyright_date_created"`
+	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
+	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
+	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
+	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
+	Copyright_State            string `json:"Copyright_State"`
 	//	Venue_Id                   string `json:"Venue_Id"`
 	//	Venue_Name                 string `json:"Venue_Name"`
 	//	User_Id                    string `json:"User_Id"`
@@ -445,14 +445,14 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Owner := "\"Owner\":\"UNDEFINED\", "
 	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
 	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
-	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\""
-	//	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\""
-	//	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
-	//	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
-	//	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
-	//	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
-	//	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
-	//	Copyright_State := "\"Copyright_State\":\"UNDEFINED\", "
+	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\", "
+	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\", "
+	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
+	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
+	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
+	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
+	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
+	Copyright_State := "\"Copyright_State\":\"UNDEFINED\""
 	//	Venue_Id := "\"Venue_Id\":\"UNDEFINED\", "
 	//	Venue_Name := "\"Venue_Name\":\"UNDEFINED\", "
 	//	User_Id := "\"User_Id\":\"UNDEFINED\", "
@@ -466,7 +466,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	fmt.Printf("Song ID is %s", Song_ID_r)
-	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + "}" // Concatenates the variables to create the total JSON object
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
