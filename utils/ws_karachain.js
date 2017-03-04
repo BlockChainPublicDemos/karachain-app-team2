@@ -23,12 +23,17 @@ module.exports.process_msg = function(ws, data){
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain svc: create performance - singer singing song');
-			var qr_png = qr.image('performance', { type: 'png' });
-			var songId = "sb1234567";
+			
+			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
+			var qr_png = qr.image(sondId, { type: 'png' });
 			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',sondId);
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',sondId);
+			var response ={
+					qr:qr_png
+			};
+			sendMsg(response);
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain svc: create visitor');
