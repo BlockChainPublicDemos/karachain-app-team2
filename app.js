@@ -141,7 +141,7 @@ require('cf-deployment-tracker-client').track();		//reports back to us, this hel
 // ============================================================================================================================
 //var part1 = require('./utils/ws_part1');														//websocket message processing for part 1
 //var part2 = require('./utils/ws_part2');														//websocket message processing for part 2
-var karachainsvc = require('./utils/ws_karachain');	
+var karachainsvc = require('ws_karachain');	
 var ws = require('ws');																			//websocket mod
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');														//rest based SDK for ibm blockchain
