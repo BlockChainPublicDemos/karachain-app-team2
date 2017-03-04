@@ -59,11 +59,11 @@ type Song struct {
 	SmartContract_Unique_ID string `json:"SmartContract_Unique_ID"`
 	Singer_Id               string `json:"Singer_Id"`
 	Singer_Name             string `json:"Singer_Name"`
-	//	Video_Id                   string `json:"Video_Id"`
-	//	Owner                      string `json:"Owner"`
-	//	Video_Link                 string `json:"Video_Link"`
-	//	Video_date_created         string `json:"Video_date_created"`
-	//	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
+	Video_Id                string `json:"Video_Id"`
+	Owner                   string `json:"Owner"`
+	Video_Link              string `json:"Video_Link"`
+	Video_date_created      string `json:"Video_date_created"`
+	Video_QR_code_Id        string `json:"Video_QR_code_Id"`
 	//	Copyright_Id               string `json:"Copyright_Id"`
 	//	Copyright_date_created     string `json:"Copyright_date_created"`
 	//	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
@@ -440,12 +440,12 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Date_created := "\"Date_created\":\"UNDEFINED\", "
 	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
 	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
-	Singer_Name := "\"Singer_Name\":\"UNDEFINED\""
-	//	Video_Id := "\"Video_Id\":\"UNDEFINED\", "
-	//	Owner := "\"Owner\":\"UNDEFINED\", "
-	//	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
-	//	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
-	//	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\", "
+	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
+	Video_Id := "\"Video_Id\":\"UNDEFINED\", "
+	Owner := "\"Owner\":\"UNDEFINED\", "
+	Video_Link := "\"Video_Link\":\"UNDEFINED\", "
+	Video_date_created := "\"Video_date_created\":\"UNDEFINED\", "
+	Video_QR_code_Id := "\"Video_QR_code_Id\":\"UNDEFINED\""
 	//	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\""
 	//	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
 	//	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
@@ -466,7 +466,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	fmt.Printf("Song ID is %s", Song_ID_r)
-	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + "}" // Concatenates the variables to create the total JSON object
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
