@@ -274,7 +274,7 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song)
 	err = stub.PutState(s.Song_ID, bytes)
 
 	if err != nil {
-		fmt.Printf("SAVE_CHANGES: Error storing song record: %s", err)
+		fmt.Printf(" SAVE_CHANGES: Error storing song record: %s", err)
 		return false, errors.New("Error storing song record")
 	}
 
