@@ -3,6 +3,7 @@
 // ==================================
 var ibc = {};
 var chaincode = {};
+var ws ={};
 var async = require('async');
 
 module.exports.setup = function(sdk, cc, qrsvc){
@@ -10,10 +11,12 @@ module.exports.setup = function(sdk, cc, qrsvc){
 	ibc = sdk;
 	chaincode = cc;
 	qr = qrsvc;
+	
 };
 
-module.exports.process_msg = function(ws, data){
+module.exports.process_msg = function(wssvc, data){
 	console.log('karachain svc: process message ',data.type);
+	ws = wssvc;
 	if(data.v === 1){																						//only look at messages for part 1
 	    if(data.type == 'createsinger'){
 			console.log('karachain svc: create a singer');
@@ -25,11 +28,11 @@ module.exports.process_msg = function(ws, data){
 			console.log('karachain svc: create performance - singer singing song');
 			
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
-			var qr_png = qr.image(sondId, { type: 'png' });
+			var qr_png = qr.image(songId, { type: 'png' });
 			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
-			console.log('karachain svc: create performance - reading song back ',sondId);
+			console.log('karachain svc: create performance - reading song back ',songId);
 			chaincode.query.read([songId], cb_query_response);
-			console.log('karachain: create performance - submitted song query ',sondId);
+			console.log('karachain: create performance - submitted song query ',songId);
 			var response ={
 					qr:qr_png
 			};
