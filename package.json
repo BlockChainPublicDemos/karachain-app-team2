@@ -22,7 +22,7 @@
 		"serve-static": "1.9.2",
 		"ws": "1.0.1",
 		"qr-image": "3.2.0",
-		"ws_karachain": "file:./utils/ws_karachain"
+		"ws_karachain": "file:./utils/ws_karachain.js"
 	},
 	"engines": {
 		"node": "0.12.0"
