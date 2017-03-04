@@ -71,13 +71,13 @@ type Song struct {
 	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
 	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
 	Copyright_State            string `json:"Copyright_State"`
-	//	Venue_Id                   string `json:"Venue_Id"`
-	//	Venue_Name                 string `json:"Venue_Name"`
-	//	User_Id                    string `json:"User_Id"`
-	//	User_role                  string `json:"User_role"`
-	//	User_rating                string `json:"User_rating"`
-	//	Obsolete                   bool   `json:"Obsolete"`
-	//	Status                     string `json:"Status"`
+	Venue_Id                   string `json:"Venue_Id"`
+	Venue_Name                 string `json:"Venue_Name"`
+	User_Id                    string `json:"User_Id"`
+	User_role                  string `json:"User_role"`
+	User_rating                string `json:"User_rating"`
+	Obsolete                   bool   `json:"Obsolete"`
+	Status                     string `json:"Status"`
 }
 
 //==============================================================================================================================
@@ -452,20 +452,20 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
 	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
 	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
-	Copyright_State := "\"Copyright_State\":\"UNDEFINED\""
-	//	Venue_Id := "\"Venue_Id\":\"UNDEFINED\", "
-	//	Venue_Name := "\"Venue_Name\":\"UNDEFINED\", "
-	//	User_Id := "\"User_Id\":\"UNDEFINED\", "
-	//	User_role := "\"User_role\":\"UNDEFINED\", "
-	//	User_rating := "\"User_rating\":\"UNDEFINED\", "
-	//	Obsolete := "\"Obsolete\":false, "
-	//	Status := "\"Status\":\"UNDEFINED\""
+	Copyright_State := "\"Copyright_State\":\"UNDEFINED\", "
+	Venue_Id := "\"Venue_Id\":\"UNDEFINED\", "
+	Venue_Name := "\"Venue_Name\":\"UNDEFINED\", "
+	User_Id := "\"User_Id\":\"UNDEFINED\", "
+	User_role := "\"User_role\":\"UNDEFINED\", "
+	User_rating := "\"User_rating\":\"UNDEFINED\", "
+	Obsolete := "\"Obsolete\":false, "
+	Status := "\"Status\":\"UNDEFINED\""
 	//	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id +
 	//		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
 	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	fmt.Printf("Song ID is %s", Song_ID_r)
-	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State + "}" // Concatenates the variables to create the total JSON object
+	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State + Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
 
 	// Do we need a certain criteria for a song ID?
 	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(Song_ID)) // matched = true if the Song ID passed fits format of two letters followed by seven digits
