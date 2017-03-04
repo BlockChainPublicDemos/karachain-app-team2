@@ -303,7 +303,7 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "ping" {
 		return t.ping(stub)
 	} else { // If the function is not a create then there must be a Song so we need to retrieve the Song.
-		argPos := 1
+		argPos := 0
 
 		s, err := t.retrieve_Song_ID(stub, args[argPos])
 
