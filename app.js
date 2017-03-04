@@ -257,7 +257,7 @@ ibc.load(options, function (err, cc){														//parse/load chaincode, respo
 	}
 	else{
 		chaincode = cc;
-		karachainsvc.setup(ibc, cc);																//pass the cc obj to part 1 node code															//pass the cc obj to part 2 node code
+		karachainsvc.setup(ibc, cc,qr);																//pass the cc obj to part 1 node code															//pass the cc obj to part 2 node code
 
 		// ---- To Deploy or Not to Deploy ---- //
 		if(!cc.details.deployed_name || cc.details.deployed_name === ''){					//yes, go deploy

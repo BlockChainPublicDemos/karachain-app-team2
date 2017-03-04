@@ -5,10 +5,11 @@ var ibc = {};
 var chaincode = {};
 var async = require('async');
 
-module.exports.setup = function(sdk, cc){
+module.exports.setup = function(sdk, cc, qrsvc){
 	console.log("karachain setup");
 	ibc = sdk;
 	chaincode = cc;
+	qr = qrsvc;
 };
 
 module.exports.process_msg = function(ws, data){
