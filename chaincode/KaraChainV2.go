@@ -460,7 +460,6 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//	User_rating := "\"User_rating\":\"UNDEFINED\", "
 	//	Obsolete := "\"Obsolete\":false, "
 	//	Status := "\"Status\":\"UNDEFINED\""
-
 	//	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id +
 	//		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
 	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
