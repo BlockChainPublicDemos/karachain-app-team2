@@ -25,11 +25,11 @@ module.exports.process_msg = function(ws, data){
 			console.log('karachain svc: create performance - singer singing song');
 			
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
-			var qr_png = qr.image(sondId, { type: 'png' });
+			var qr_png = qr.image(songId, { type: 'png' });
 			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
-			console.log('karachain svc: create performance - reading song back ',sondId);
+			console.log('karachain svc: create performance - reading song back ',songId);
 			chaincode.query.read([songId], cb_query_response);
-			console.log('karachain: create performance - submitted song query ',sondId);
+			console.log('karachain: create performance - submitted song query ',songId);
 			var response ={
 					qr:qr_png
 			};
