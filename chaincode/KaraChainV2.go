@@ -754,7 +754,22 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 //=================================================================================================================================
 func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
 
-	// to be implemented
+	if s.Obsolete != true {
+
+		s.SmartContract_Unique_ID = new_value
+	} else {
+
+		return nil, errors.New(fmt.Sprint("Permission denied to set a contract."))
+
+	}
+
+	_, err := t.save_changes(stub, s)
+
+	if err != nil {
+		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
+		return nil, errors.New("Error saving changes")
+	}
+
 	return nil, nil
 
 }
