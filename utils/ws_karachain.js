@@ -3,6 +3,7 @@
 // ==================================
 var ibc = {};
 var chaincode = {};
+var ws ={};
 var async = require('async');
 
 module.exports.setup = function(sdk, cc, qrsvc){
@@ -10,10 +11,12 @@ module.exports.setup = function(sdk, cc, qrsvc){
 	ibc = sdk;
 	chaincode = cc;
 	qr = qrsvc;
+	
 };
 
-module.exports.process_msg = function(ws, data){
+module.exports.process_msg = function(wssvc, data){
 	console.log('karachain svc: process message ',data.type);
+	ws = wssvc;
 	if(data.v === 1){																						//only look at messages for part 1
 	    if(data.type == 'createsinger'){
 			console.log('karachain svc: create a singer');
