@@ -28,7 +28,7 @@ module.exports.process_msg = function(wssvc, data){
 			console.log('karachain svc: create performance - singer singing song');
 			
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
-			var qr_png = qrImage.imageSync(songId, { type: 'png' });
+			var qr_png = qr.imageSync(songId, { type: 'png' });
 			//qr.image(songId, { type: 'png' });
 			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
