@@ -800,8 +800,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 	Copyright_date_created := args[2]
 	Copyright_Institution_Id := args[3]
 	Copyright_Institution_Name := args[4]
-	Copyright_State := args[5]
-	SmartContract_Unique_ID := args[6]
+	SmartContract_Unique_ID := args[5]
 
 	if s.Obsolete != true {
 
@@ -809,7 +808,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 		s.Copyright_date_created = Copyright_date_created
 		s.Copyright_Institution_Id = Copyright_Institution_Id
 		s.Copyright_Institution_Name = Copyright_Institution_Name
-		s.Copyright_State = Copyright_State
+		s.Copyright_State = STATE_CONTRACT_PROVIDED
 		s.SmartContract_Unique_ID = SmartContract_Unique_ID
 	} else {
 
@@ -834,18 +833,16 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
 	//Owner                      string `json:"Owner"`
-	var Copyright_Id string = args[1]
-	var Copyright_decision string = args[0]
+	var Copyright_decision string = args[1]
 	var Copyright_date_decision string = args[2]
 	// Copyright_State            string `json:"Copyright_State"`
 
 	if s.Obsolete != true &&
-		Copyright_Id == s.Copyright_Id &&
 		s.Copyright_State != STATE_CONTRACT_ACCEPTED {
 		if Copyright_decision == "true" {
 			s.Copyright_State = STATE_CONTRACT_ACCEPTED
 			s.Copyright_date_accepted = Copyright_date_decision
-			s.Owner = Copyright_Id
+			s.Owner = s.Copyright_Id
 		}
 
 		if Copyright_decision == "false" {
