@@ -249,7 +249,8 @@ if(process.env.VCAP_SERVICES){
 }
 
 // ---- Fire off SDK ---- //
-var chaincode = null;																		//sdk will populate this var in time, lets give it high scope by creating it here
+var chaincode = null;		
+ibc.clear();  //clear old chain code ..//sdk will populate this var in time, lets give it high scope by creating it here
 ibc.load(options, function (err, cc){														//parse/load chaincode, response has chaincode functions!
 	if(err != null){
 		console.log('! looks like an error loading the chaincode or network, app will fail\n', err);
