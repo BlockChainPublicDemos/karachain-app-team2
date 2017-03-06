@@ -37,7 +37,8 @@ module.exports.process_msg = function(wssvc, data){
 			data.videoid = "vd"+Math.round(Math.pow(10,7)*Math.random());
 			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
-			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, JSON.stringify(qrjson), data.venueid, data.venue], cb_invoked);	//create a new song		
+			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
+			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',songId);
