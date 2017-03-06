@@ -30,18 +30,21 @@ module.exports.process_msg = function(wssvc, data){
 			//data.name data.date data.singer data.videoid, data.videourl data.videoqrcode data.venuid data.venue 
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
 			var qr_png = qr.imageSync(songId, { type: 'png' });
+			var qrjson ={
+					qr:qr_png
+			};
 			//qr.image(songId, { type: 'png' });
 			data.videoid = "vd"+Math.round(Math.pow(10,7)*Math.random());
 			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
-			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl, qr_png, data.venueid, data.venue], cb_invoked);	//create a new song		
+			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl, JSON.stringify(qrjson), data.venueid, data.venue], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',songId);
 			var response ={
 					qr:qr_png
 			};
-			sendMsg(response);
+			sendMsg(qrjson);
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain svc: create visitor');
