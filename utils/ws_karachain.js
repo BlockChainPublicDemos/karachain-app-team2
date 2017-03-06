@@ -5,6 +5,8 @@ var ibc = {};
 var chaincode = {};
 var ws ={};
 var async = require('async');
+var performances = [];
+var lastSongId = "kc9600760"; //placeholder value
 
 module.exports.setup = function(sdk, cc, qrsvc){
 	console.log("karachain setup");
@@ -13,7 +15,37 @@ module.exports.setup = function(sdk, cc, qrsvc){
 	qr = qrsvc;
 	
 };
+/*Go code
+ * if function == "create_song" { // we create a song from scratch
+		return t.create_song(stub, caller, caller_affiliation, args)
+	} else if function == "ping" {
+		return t.ping(stub)
+	} else { // If the function is not a create then there must be a Song so we need to retrieve the Song.
 
+		Song_ID := args[0]
+
+		s, err := t.retrieve_Song_ID(stub, Song_ID)
+
+		if err != nil {
+			fmt.Printf("INVOKE: Error retrieving Song: %s", err)
+			return nil, errors.New("Error retrieving Song")
+		}
+
+		if function == "Set_Contract" { // Only the copyright authority is allowed to set a contract
+			return t.set_contract(stub, s, caller, caller_affiliation, args)
+		} else if function == "Set_Rating" { // Rating can be set by anybody, but only once and not by the singer
+			return t.set_rating(stub, s, caller, caller_affiliation, args)
+		} else if function == "Set_Contract_Response" { // Function my only be called by the singer
+			return t.set_contract_response(stub, s, caller, caller_affiliation, args)
+		} else if function == "update_song" { // Function may only be called by the singer
+			return t.update_song(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "update_contract" { // Function may only be called by the copyright institution if the existing contract
+			return t.update_contract(stub, s, caller, caller_affiliation, args[0])
+		} else if function == "update_rating" { // Rating can be set by anybody, but only once and not by the singer. In this case, a previous rating of the user must exist
+			return t.update_rating(stub, s, caller, caller_affiliation, args[0])
+		}
+
+ */
 module.exports.process_msg = function(wssvc, data){
 	console.log('karachain svc: process message ',data.type);
 	ws = wssvc;
@@ -26,7 +58,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain svc: create performance - singer singing song');
-			//"type" : "createperformance","name":"rocknroll", "venue":"lazy dog", "date":"undefined","singer": "bob","v":1}
+			//{"type" : "createperformance","name":"rocknroll", "venue":"lazy dog", "date":"undefined","singer": "bob","v":1}
 			//data.name data.date data.singer data.videoid, data.videourl data.videoqrcode data.venuid data.venue 
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
 			var qr_png = qr.imageSync(songId, { type: 'png' });
@@ -40,6 +72,7 @@ module.exports.process_msg = function(wssvc, data){
 			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
 			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
+			lastSongId = songId;
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',songId);
 			var response ={
@@ -57,11 +90,45 @@ module.exports.process_msg = function(wssvc, data){
 		} 
 		else if(data.type == 'voteperformance'){
 			console.log('karachain svc: vote performance');
+			/**
+			 * Song_IDUser_Rating
+			 * "AA1111127", "5"
+			 * Set_Rating
+			 */
+			//TODO get data from visitor client
+			data.rating = 5;
+			data.songid = lastSongId;  
+			chaincode.invoke.Set_Rating([data.songid,data.rating], cb_invoked);	//create a new song		
+		}
+		else if(data.type == 'viewmyperformances'){
+			console.log('karachain svc: get my performances');
+			chaincode.query.Get_Songs([], cb_query_songs);
+			/*
+			 * Song_ID
+			 * "AA1111127"
+			 */
+		}	
+		else if(data.type == 'submitoffer'){
+			console.log('karachain svc: submit offer');
+			/*
+			 * Song_IDCopyright_IDCopyright_Date_createdCopyright_Institution_IDCopyright_Institution_NameSmartContract_Unique_ID
+			 * "AA1111127", "12345", "01.01.2017", "Institution_123", "Dr. Dre Records", "56789"
+			 */
+			//TODO .. get data from client
+			data.songid = lastSongId;
+			data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
+			data.copywriteid = "cw"+Math.round(Math.pow(10,7)*Math.random());
+			data.date = "01/30/2017";
+			data.copywritedate = "01/30/2017";
+			data.eventmgrid = "em"+Math.round(Math.pow(10,7)*Math.random());
+			data.eventmgrname = "Bob";
+			
+			chaincode.invoke.Set_Contract([data.songid,data.copywriteid,data.copywritedate, data.eventmgrid,data.eventmgrname, data.contractid], cb_invoked);	//create a new song		
+			console.log('karachain svc:submitted offer ',data.songid);
 			
 		}
-		else if(data.type == 'getmyperformances'){
-			console.log('karachain svc: get my performances');
-			chaincode.query.read(['_allsongsindex'], cb_got_index);
+		else if(data.type == 'viewtopperformances'){
+			console.log('karachain svc: view performance ratings');
 			
 		}
 		else if(data.type == 'getmyoffers'){
@@ -70,7 +137,18 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'acceptoffer'){
 			console.log('karachain svc: accept offer');
+			/*
+			 * Song_IDCopyright_decision (“false” or “true”)Copyright decision date
+			 * "AA1111127", "false", "01.01.2017"
+			 * Set_Contract_Response
+			 */
+			data.songid = lastSongId;
+			data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
+			data.accepted = false;
+			data.date = "01/30/2017";
 			
+			chaincode.invoke.Set_Contract_Response([data.songid,data.accepted,data.date], cb_invoked);	//create a new song		
+			console.log('karachain svc:accept offer ',data.songid);
 		}
 		else if(data.type == 'transfer'){
 			console.log('transfering msg');
@@ -117,6 +195,19 @@ module.exports.process_msg = function(wssvc, data){
 	//invoke call back
 	function cb_invoked(e, a){
 		console.log('invoke response: ', e, a);
+	}
+	//get songs cb
+	function cb_query_songs(e, songs){
+		if(e != null) {
+			console.log('[query songs error] did not get query response:', e);
+		}else{
+			if (resonse != null){
+				console.log('[query songs] got query response:', response);
+			}else{
+				console.log('[query songs] NULL query response:');
+			}
+		}
+		sendMsg(songs);
 	}
 	//cc query callback
 	function cb_query_response(e, resonse){
