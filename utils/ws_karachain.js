@@ -26,11 +26,15 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain svc: create performance - singer singing song');
-			
+			//"type" : "createperformance","name":"rocknroll", "venue":"lazy dog", "date":"undefined","singer": "bob","v":1}
+			//data.name data.date data.singer data.videoid, data.videourl data.videoqrcode data.venuid data.venue 
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
 			var qr_png = qr.imageSync(songId, { type: 'png' });
 			//qr.image(songId, { type: 'png' });
-			chaincode.invoke.create_song([songId], cb_invoked);	//create a new song		
+			data.videoid = "vd"+Math.round(Math.pow(10,7)*Math.random());
+			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
+			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
+			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl, qr_png, data.venueid, data.venue], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',songId);
