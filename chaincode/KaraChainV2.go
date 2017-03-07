@@ -461,7 +461,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	Song_ID := "\"Song_ID\":\"" + args[0] + "\", " // Variables to define the JSON
 	Date_created := "\"Date_created\":\"" + args[1] + "\", "
 	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
-	Singer_Id := "\"Singer_Id\":\"UNDEFINED\", "
+	Singer_Id := "\"Singer_Id\":\"" + args[8] + "\", "
 	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
 	Video_Id := "\"Video_Id\":\"" + args[2] + "\", "
 	Owner := "\"Owner\":\"UNDEFINED\", "
@@ -550,6 +550,41 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	if err != nil {
 		return nil, errors.New("Unable to put the state")
 	}
+
+	// Here we create our composite keys
+
+	//	qr_indexName := "QR~name"
+	//
+	//	qrIndexKey, err := stub.CreateCompositeKey(qr_indexName, []string{s.Video_QR_code_Id, s.Song_ID})
+	//	if err != nil {
+	//		return shim.Error(err.Error())
+	//	}
+	//	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	//	value := []byte{0x00}
+	//	stub.PutState(qrIndexKey, value)
+	//
+	//	singer_indexName := "Singer~name"
+	//
+	//	singerIndexKey, err := stub.CreateCompositeKey(singer_indexName, []string{s.Singer_Id, s.Song_ID})
+	//	if err != nil {
+	//		return shim.Error(err.Error())
+	//	}
+	//	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	//	// value := []byte{0x00}
+	//	stub.PutState(singerIndexKey, value)
+	//
+	//	venue_indexName := "Venue~name"
+	//
+	//	venueIndexKey, err := stub.CreateCompositeKey(venue_indexName, []string{s.Venue_Id, s.Song_ID})
+	//	if err != nil {
+	//		return shim.Error(err.Error())
+	//	}
+	//	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	//	// value := []byte{0x00}
+	//	stub.PutState(venueIndexKey, value)
 
 	return nil, nil
 
@@ -767,12 +802,14 @@ func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, 
 func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
 	// Song ID is args[0]
 	var User_rating string = args[1]
+	var User_Id string = args[2]
 	// User = caller
 	var User_role string = AUDIENCE
 	if s.Obsolete != true {
 
 		s.User_rating = User_rating
 		s.User_role = User_role
+		s.User_Id = User_Id
 
 	} else {
 
@@ -786,6 +823,19 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
 		return nil, errors.New("Error saving changes")
 	}
+
+	// Here we create our composite keys
+
+	//	user_rating_indexName := "user_rating~name"
+	//
+	//	user_rating_IndexKey, err := stub.CreateCompositeKey(user_rating_indexName, []string{s.User_Id, s.Song_ID})
+	//	if err != nil {
+	//		return shim.Error(err.Error())
+	//	}
+	//	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	//	value := []byte{0x00}
+	//	stub.PutState(user_rating_IndexKey, value)
 
 	return nil, nil
 
@@ -822,6 +872,21 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
 		return nil, errors.New("Error saving changes")
 	}
+
+	// Here we create our composite keys
+
+	//	copyright_indexName := "copyright~name"
+	//
+	//	copyrightIndexKey, err := stub.CreateCompositeKey(copyright_indexName, []string{s.Copyright_Institution_Id, s.Song_ID})
+	//	if err != nil {
+	//		return shim.Error(err.Error())
+	//	}
+	//	//  Save index entry to state. Only the key name is needed, no need to store a duplicate copy of the marble.
+	//	//  Note - passing a 'nil' value will effectively delete the key from state, therefore we pass null character as value
+	//	value := []byte{0x00}
+	//	stub.PutState(copyrightIndexKey, value)
+	//
+	//	return nil, nil
 
 	return nil, nil
 
