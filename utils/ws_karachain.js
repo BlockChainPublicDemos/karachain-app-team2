@@ -7,6 +7,31 @@ var ws ={};
 var async = require('async');
 var performances = [];
 var lastSongId = "kc9600760"; //placeholder value
+var lastSingerId = "user_type1_1";
+/**
+ * admine0e2435d74
+WebAppAdmin502f66b484
+user_type1_0a01996bb60 //type1_0 = admin
+user_type1_16ee2c832e7//singer
+user_type1_24035add836
+user_type1_31691188bc1
+user_type1_4590e3fec92
+user_type2_06a80515894//type2 = visitors
+user_type2_1d8d80a9f81
+user_type2_21b5feb25a0
+user_type2_3fd60fb13e3
+user_type2_4e5d0c330a6
+user_type4_0d0bd04950e //type4 = evt mgrs
+user_type4_12f176b4351
+user_type4_20903dc8ee1
+user_type4_3cb769ac24b
+user_type4_492f82c1c16
+user_type8_04a8d6f6a59
+user_type8_18d582015f2
+user_type8_2c0b47a9471
+user_type8_3973dcda0b8
+user_type8_4ae3d1e2132
+ */
 
 module.exports.setup = function(sdk, cc, qrsvc){
 	console.log("karachain setup");
@@ -52,9 +77,8 @@ module.exports.process_msg = function(wssvc, data){
 	if(data.v === 1){																						//only look at messages for part 1
 	    if(data.type == 'createsinger'){
 			console.log('karachain svc: create a singer');
-			if(data.name && data.color && data.size && data.user){
-				chaincode.invoke.init_singer([data.name, data.color, data.size, data.user], cb_invoked);	//create a new singer
-			}
+     		//chaincode.invoke.init_singer([], cb_invoked);	//create a new singer
+			
 		}
 		else if(data.type == 'createperformance'){
 			console.log('karachain svc: create performance - singer singing song');
@@ -63,6 +87,7 @@ module.exports.process_msg = function(wssvc, data){
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
 			var qr_png = qr.imageSync(songId, { type: 'png' });
 			var qrjson ={
+					songid:songId,
 					qr:qr_png
 			};
 			//qr.image(songId, { type: 'png' });
@@ -70,14 +95,14 @@ module.exports.process_msg = function(wssvc, data){
 			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
 			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
-			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue], cb_invoked);	//create a new song		
+			data.singerid = lastSingerId;
+			
+			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue,data.singerid], cb_invoked);	//create a new song		
 			console.log('karachain svc: create performance - reading song back ',songId);
 			lastSongId = songId;
 			chaincode.query.read([songId], cb_query_response);
 			console.log('karachain: create performance - submitted song query ',songId);
-			var response ={
-					qr:qr_png
-			};
+		
 			sendMsg(qrjson);
 		}
 		else if(data.type == 'createvisitor'){
@@ -98,7 +123,7 @@ module.exports.process_msg = function(wssvc, data){
 			//TODO get data from visitor client
 			data.rating = 5;
 			data.songid = lastSongId;  
-			chaincode.invoke.Set_Rating([data.songid,data.rating], cb_invoked);	//create a new song		
+			chaincode.invoke.Set_Rating([data.songid,data.rating,lastSingerId], cb_invoked);	//create a new song		
 		}
 		else if(data.type == 'viewmyperformances'){
 			console.log('karachain svc: get my performances');
@@ -107,7 +132,15 @@ module.exports.process_msg = function(wssvc, data){
 			 * Song_ID
 			 * "AA1111127"
 			 */
-		}	
+		}
+		else if(data.type == 'viewmyperformance'){
+			console.log('karachain svc: get a performances');
+			chaincode.query.Get_Song(lastSongId, cb_query_songs);
+			/*
+			 * Song_ID
+			 * "AA1111127"
+			 */
+		}		
 		else if(data.type == 'submitoffer'){
 			console.log('karachain svc: submit offer');
 			/*
