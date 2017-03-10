@@ -8,6 +8,7 @@ var async = require('async');
 var performances = [];
 var lastSongId = "kc846908"; //placeholder value
 var lastSingerId = "user_type1_1";
+var lastVisitorId = "user_type2_0";
 /**
  * admine0e2435d74
 WebAppAdmin502f66b484
@@ -114,7 +115,7 @@ module.exports.process_msg = function(wssvc, data){
 			
 		} 
 		else if(data.type == 'voteperformance'){
-			console.log('karachain svc: vote performance');
+			console.log('karachain svc: vote performance ',data.songid,data.rating);
 			/**
 			 * Song_IDUser_Rating
 			 * "AA1111127", "5"
