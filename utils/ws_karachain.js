@@ -6,7 +6,7 @@ var chaincode = {};
 var ws ={};
 var async = require('async');
 var performances = [];
-var lastSongId = "kc9600760"; //placeholder value
+var lastSongId = "kc846908"; //placeholder value
 var lastSingerId = "user_type1_1";
 /**
  * admine0e2435d74
@@ -121,9 +121,9 @@ module.exports.process_msg = function(wssvc, data){
 			 * Set_Rating
 			 */
 			//TODO get data from visitor client
-			data.rating = 5;
-			data.songid = lastSongId;  
-			chaincode.invoke.Set_Rating([data.songid,data.rating,lastSingerId], cb_invoked);	//create a new song		
+			//data.rating = 5;
+			//data.songid = lastSongId;  
+			chaincode.invoke.Set_Rating([data.songid,data.rating,lastVisitorId], cb_invoked);	//create a new song		
 		}
 		else if(data.type == 'viewmyperformances'){
 			console.log('karachain svc: get my performances');
