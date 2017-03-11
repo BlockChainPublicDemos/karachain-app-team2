@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"regexp"
+	//"regexp"
 	//"strconv"
 	//	"strings"
 	//	"time"
@@ -46,47 +46,98 @@ const STATE_OBSOLETE = "7"
 type SimpleChaincode struct {
 }
 
-//TODO: need to understand how to organize the ledger .. by song, by list of songs per singer or one list of songs by all singers
-var karachainKey = "_allsongsindex"
+//Global keys
+var SongKey = "_allsongsindex"
+
+//var SingerKey = "_allsingerindex"
 
 //==============================================================================================================================
 //	Song - Defines the structure for a Song object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
+// 			Key for that structure in the BlockChain is the Song_ID
 //==============================================================================================================================
 type Song struct {
-	Song_ID                    string `json:"Song_ID"`
-	Date_created               string `json:"Date_created"`
-	SmartContract_Unique_ID    string `json:"SmartContract_Unique_ID"`
-	Singer_Id                  string `json:"Singer_Id"`
-	Singer_Name                string `json:"Singer_Name"`
-	Video_Id                   string `json:"Video_Id"`
-	Owner                      string `json:"Owner"`
-	Video_Link                 string `json:"Video_Link"`
-	Video_date_created         string `json:"Video_date_created"`
-	Video_QR_code_Id           string `json:"Video_QR_code_Id"`
-	Copyright_Id               string `json:"Copyright_Id"`
+	Song_ID      string `json:"Song_ID"`
+	Date_created string `json:"Date_created"`
+	//	SmartContract_Unique_ID    string   `json:"SmartContract_Unique_ID"`
+	Singer_Id          string `json:"Singer_Id"`
+	Singer_Name        string `json:"Singer_Name"`
+	Video_Id           string `json:"Video_Id"`
+	Owner              string `json:"Owner"`
+	Video_Link         string `json:"Video_Link"`
+	Video_date_created string `json:"Video_date_created"`
+	Video_QR_code_Id   string `json:"Video_QR_code_Id"`
+	//	Copyright_Id               string   `json:"Copyright_Id"`
+	//	Copyright_date_created     string   `json:"Copyright_date_created"`
+	//	Copyright_date_accepted    string   `json:"Copyright_date_accepted"`
+	//	Copyright_date_rejected    string   `json:"Copyright_date_rejected"`
+	//	Copyright_Institution_Id   string   `json:"Copyright_Institution_Id"`
+	//	Copyright_Institution_Name string   `json:"Copyright_Institution_Name"`
+	//	Copyright_State            string   `json:"Copyright_State"`
+	Venue_Id   string `json:"Venue_Id"`
+	Venue_Name string `json:"Venue_Name"`
+	//User_Id     []string `json:"User_Id"`
+	//User_role   []string `json:"User_role"`
+	//User_rating []string `json:"User_rating"`
+	User_rating map[string]int
+	Obsolete    bool   `json:"Obsolete"`
+	Status      string `json:"Status"`
+	Song_Name   string `json:"Song_Name"`
+	AVG_Rating  string `json:"AVG_Rating"`
+	//	Contract_date_from         string   `json:"Contract_date_from"`
+	//	Contract_date_to           string   `json:"Contract_date_to"`
+}
+
+//==============================================================================================================================
+//	Song Holder - Defines the structure that holds all the Song_IDs for songs that have been created.
+//				Used as an index when querying all songs. Key in the BlockChain for that structure is the Singer ID
+//==============================================================================================================================
+
+type Song_Holder struct {
+	Songs []Song_basics
+	//	Song_IDs        []string `json:"Song_IDs"`
+	//	Song_AVG_Rating []string `json:"Song_AVG_Rating"`
+	//	Song_Name       []string `json:"Song_Name"`
+	//	Singer_Name     []string `json:"Singer_Name"`
+	// Songs []Song
+}
+
+//==============================================================================================================================
+//	Song basic info - Contains basic song information and can be stored in the song holder
+//==============================================================================================================================
+
+type Song_basics struct {
+	Song_ID         string `json:"Song_ID"`
+	Song_AVG_Rating string `json:"Song_AVG_Rating"`
+	Song_Name       string `json:"Song_Name"`
+	Singer_Name     string `json:"Singer_Name"`
+	// Songs []Song
+}
+
+//==============================================================================================================================
+//	Contract Holder - Defines the structure that holds all the Contracts for a singer that have been created.
+//				Used as an index when querying all contracts per Singer
+//==============================================================================================================================
+
+type Contract_holder struct {
+	Contracts []Contract
+}
+
+//==============================================================================================================================
+//	Contract  - Defines the structure for a single contract. Can be added to the contract holder
+//==============================================================================================================================
+
+type Contract struct {
+	Copyright_Id               string `json:"Copyright_Ids"`
 	Copyright_date_created     string `json:"Copyright_date_created"`
 	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
 	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
 	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
 	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
 	Copyright_State            string `json:"Copyright_State"`
-	Venue_Id                   string `json:"Venue_Id"`
-	Venue_Name                 string `json:"Venue_Name"`
-	User_Id                    string `json:"User_Id"`
-	User_role                  string `json:"User_role"`
-	User_rating                string `json:"User_rating"`
-	Obsolete                   bool   `json:"Obsolete"`
-	Status                     string `json:"Status"`
-}
-
-//==============================================================================================================================
-//	Song Holder - Defines the structure that holds all the Song_IDs for songs that have been created.
-//				Used as an index when querying all songs
-//==============================================================================================================================
-
-type Song_Holder struct {
-	Song_IDs []string `json:"Song_IDs"`
+	Contract_date_from         string `json:"Contract_date_from"`
+	Contract_date_to           string `json:"Contract_date_to"`
+	SmartContract_ID           string `json:"SmartContract_ID"`
 }
 
 //==============================================================================================================================
@@ -132,11 +183,25 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Error creating initial song placeholders")
 	}
 
-	err = stub.PutState(karachainKey, bytes)
+	err = stub.PutState(SongKey, bytes)
 	if err != nil {
 		return nil, err
 	}
 	return nil, nil
+
+	//	var Contracts Contract_Holder
+	//
+	//	bytes_c, err := json.Marshal(Contracts)
+	//
+	//	if err != nil {
+	//		return nil, errors.New("Error creating initial Contract placeholders")
+	//	}
+	//
+	//	err = stub.PutState(SingerKey, bytes_c)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	return nil, nil
 
 	//
 	//	for i := 0; i < len(args); i = i + 2 {
@@ -167,13 +232,34 @@ func (t *SimpleChaincode) get_ecert(stub shim.ChaincodeStubInterface, name strin
 //==============================================================================================================================
 //	 song_constructor - Creates a song structure and assigns values to it.
 //==============================================================================================================================
-func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, args []string) (Song, error) {
+func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) (Song, error) {
 
 	var s Song
+	if args[0] == "" {
+		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
+		return s, errors.New("Invalid Song_ID provided")
+	}
 
-	//	for i := 0; i < len(args); i = i + 2 {
-	//		t.add_ecert(stub, args[i], args[i+1])
-	//	}
+	if len(args) < 10 {
+		s.Song_ID = args[0]
+		s.Date_created = args[1]
+		s.Singer_Id = args[8]
+		s.Video_Id = args[2]
+		s.Video_Link = args[3]
+		s.Video_date_created = args[4]
+		s.Video_QR_code_Id = args[5]
+		s.Singer_Name = args[9]
+		s.Venue_Id = args[6]
+		s.Venue_Name = args[7]
+		//		s.User_Id = "UNDEFINED"
+		//		s.User_role = "UNDEFINED"
+		s.Obsolete = false
+		s.Status = "UNDEFINED"
+		s.Song_Name = args[10]
+		s.AVG_Rating = "UNDEFINED"
+	} else {
+		return s, errors.New("Not enough attributes to create a song")
+	}
 
 	return s, nil
 }
@@ -319,6 +405,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.create_song(stub, caller, caller_affiliation, args)
 	} else if function == "ping" {
 		return t.ping(stub)
+	} else if function == "Set_Contract" { // Only the copyright authority is allowed to set a contract
+		return t.set_contract(stub, caller, caller_affiliation, args)
+	} else if function == "Set_Contract_Response" { // Function my only be called by the singer
+		return t.set_contract_response(stub, caller, caller_affiliation, args)
 	} else { // If the function is not a create then there must be a Song so we need to retrieve the Song.
 
 		Song_ID := args[0]
@@ -330,19 +420,14 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 			return nil, errors.New("Error retrieving Song")
 		}
 
-		if function == "Set_Contract" { // Only the copyright authority is allowed to set a contract
-			return t.set_contract(stub, s, caller, caller_affiliation, args)
-		} else if function == "Set_Rating" { // Rating can be set by anybody, but only once and not by the singer
+		if function == "Set_Rating" { // Rating can be set by anybody, but only once and not by the singer
 			return t.set_rating(stub, s, caller, caller_affiliation, args)
-		} else if function == "Set_Contract_Response" { // Function my only be called by the singer
-			return t.set_contract_response(stub, s, caller, caller_affiliation, args)
 		} else if function == "update_song" { // Function may only be called by the singer
 			return t.update_song(stub, s, caller, caller_affiliation, args[0])
-		} else if function == "update_contract" { // Function may only be called by the copyright institution if the existing contract
-			return t.update_contract(stub, s, caller, caller_affiliation, args[0])
-		} else if function == "update_rating" { // Rating can be set by anybody, but only once and not by the singer. In this case, a previous rating of the user must exist
-			return t.update_rating(stub, s, caller, caller_affiliation, args[0])
 		}
+		//		else if function == "set_obsolete" { // Function may only be called by the singer
+		//			return t.set_obsolete(stub, s, caller, caller_affiliation, args[0])
+		//		}
 
 		return nil, errors.New("Function of the name " + function + " doesn't exist.")
 
@@ -367,25 +452,6 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 	logger.Debug("function: ", function)
 	logger.Debug("caller: ", caller)
 	logger.Debug("affiliation: ", caller_affiliation)
-
-	//	for i := 0; i < len(args); i = i + 2 {
-	//		t.add_ecert(stub, args[i], args[i+1])
-	//	}
-
-	//	if function == "get_vehicle_details" {
-	//		if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
-	//		v, err := t.retrieve_v5c(stub, args[0])
-	//		if err != nil { fmt.Printf("QUERY: Error retrieving v5c: %s", err); return nil, errors.New("QUERY: Error retrieving v5c "+err.Error()) }
-	//		return t.get_vehicle_details(stub, v, caller, caller_affiliation)
-	//	} else if function == "check_unique_v5c" {
-	//		return t.check_unique_v5c(stub, args[0], caller, caller_affiliation)
-	//	} else if function == "get_vehicles" {
-	//		return t.get_vehicles(stub, caller, caller_affiliation)
-	//	} else if function == "get_ecert" {
-	//		return t.get_ecert(stub, args[0])
-	//	} else if function == "ping" {
-	//		return t.ping(stub)
-	//	}
 
 	/**TODO  leave out for now */
 	if function == "Get_Song" { // Allowed by anybody to get the latest song details. Audience should not see contract details
@@ -458,58 +524,55 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	//Song_ID := "\"Song_ID\":\"UNDEFINED\"" // Variables to define the JSON
 	//	Song_ID := "\"Song_ID\":\"" + Song_ID_r + "\", " // Variables to define the JSON
 	//	Date_created := "\"Date_created\":\"UNDEFINED\""
-	Song_ID := "\"Song_ID\":\"" + args[0] + "\", " // Variables to define the JSON
-	Date_created := "\"Date_created\":\"" + args[1] + "\", "
-	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
-	Singer_Id := "\"Singer_Id\":\"" + args[8] + "\", "
-	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
-	Video_Id := "\"Video_Id\":\"" + args[2] + "\", "
-	Owner := "\"Owner\":\"UNDEFINED\", "
-	Video_Link := "\"Video_Link\":\"" + args[3] + "\", "
-	Video_date_created := "\"Video_date_created\":\"" + args[4] + "\", "
-	Video_QR_code_Id := "\"Video_QR_code_Id\":\"" + args[5] + "\", "
-	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\", "
-	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
-	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
-	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
-	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
-	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
-	Copyright_State := "\"Copyright_State\":\"UNDEFINED\", "
-	Venue_Id := "\"Venue_Id\":\"" + args[6] + "\", "
-	Venue_Name := "\"Venue_Name\":\"" + args[7] + "\", "
-	User_Id := "\"User_Id\":\"UNDEFINED\", "
-	User_role := "\"User_role\":\"UNDEFINED\", "
-	User_rating := "\"User_rating\":\"UNDEFINED\", "
-	Obsolete := "\"Obsolete\":false, "
-	Status := "\"Status\":\"UNDEFINED\""
-	//	Song_json := "{" +  Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id +
-	//		Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State +
-	//		Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+	//	Song_ID := "\"Song_ID\":\"" + args[0] + "\", " // Variables to define the JSON
+	//	Date_created := "\"Date_created\":\"" + args[1] + "\", "
+	//	SmartContract_Unique_ID := "\"SmartContract_Unique_ID\":\"UNDEFINED\", "
+	//	Singer_Id := "\"Singer_Id\":\"" + args[8] + "\", "
+	//	Singer_Name := "\"Singer_Name\":\"UNDEFINED\", "
+	//	Video_Id := "\"Video_Id\":\"" + args[2] + "\", "
+	//	Owner := "\"Owner\":\"UNDEFINED\", "
+	//	Video_Link := "\"Video_Link\":\"" + args[3] + "\", "
+	//	Video_date_created := "\"Video_date_created\":\"" + args[4] + "\", "
+	//	Video_QR_code_Id := "\"Video_QR_code_Id\":\"" + args[5] + "\", "
+	//	//	Copyright_Id := "\"Copyright_Id\":\"UNDEFINED\", "
+	//	//	Copyright_date_created := "\"Copyright_date_created\":\"UNDEFINED\", "
+	//	//	Copyright_date_accepted := "\"Copyright_date_accepted\":\"UNDEFINED\", "
+	//	//	Copyright_date_rejected := "\"Copyright_date_rejected\":\"UNDEFINED\", "
+	//	//	Copyright_Institution_Id := "\"Copyright_Institution_Id\":\"UNDEFINED\", "
+	//	//	Copyright_Institution_Name := "\"Copyright_Institution_Name\":\"UNDEFINED\", "
+	//	//	Copyright_State := "\"Copyright_State\":\"UNDEFINED\", "
+	//	Venue_Id := "\"Venue_Id\":\"" + args[6] + "\", "
+	//	Venue_Name := "\"Venue_Name\":\"" + args[7] + "\", "
+	//	User_Id := "\"User_Id\":\"UNDEFINED\", "
+	//	User_role := "\"User_role\":\"UNDEFINED\", "
+	//	User_rating := "\"User_rating\":\"UNDEFINED\", "
+	//	Obsolete := "\"Obsolete\":false, "
+	//	Status := "\"Status\":\"UNDEFINED\""
+	//	Song_Name := "\"Song_Name\":\"" + args[8] + "\", "
+	//	AVG_Rating := "\"AVG_Rating\":\"UNDEFINED\""
 
-	fmt.Printf("Song ID is %s", args[0])
-	Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State + Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+	//fmt.Printf("Song ID is %s", args[0])
+	//Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Copyright_Id + Copyright_date_created + Copyright_date_accepted + Copyright_date_rejected + Copyright_Institution_Id + Copyright_Institution_Name + Copyright_State + Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+	//Song_json := "{" + Song_ID + Date_created + SmartContract_Unique_ID + Singer_Id + Singer_Name + Video_Id + Owner + Video_Link + Video_date_created + Video_QR_code_Id + Venue_Id + Venue_Name + User_Id + User_role + User_rating + Obsolete + Status + "}" // Concatenates the variables to create the total JSON object
+	// No need for a song criteria so far
+	//	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(args[0])) // matched = true if the Song ID passed fits format of two letters followed by seven digits
+	//
+	//	if err != nil {
+	//		fmt.Printf("CREATE_Song: Invalid Song_ID: %s", err)
+	//		return nil, errors.New("Invalid Song_ID")
+	//	}
 
-	// Do we need a certain criteria for a song ID?
-	_, err := regexp.Match("^[A-z][A-z][0-9]{7}", []byte(args[0])) // matched = true if the Song ID passed fits format of two letters followed by seven digits
+	//	err = json.Unmarshal([]byte(Song_json), &s) // Convert the JSON defined above into a Song object for go
+	//
+	//
+	//
+	//	if err != nil {
+	//		error_s := err.Error()
+	//		fmt.Printf("Invalid JSON object. Error is : %s", err)
+	//		return nil, errors.New(error_s)
+	//	}
 
-	if err != nil {
-		fmt.Printf("CREATE_Song: Invalid Song_ID: %s", err)
-		return nil, errors.New("Invalid Song_ID")
-	}
-
-	if args[0] == "" {
-		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
-		return nil, errors.New("Invalid Song_ID provided")
-	}
-
-	err = json.Unmarshal([]byte(Song_json), &s) // Convert the JSON defined above into a Song object for go
-
-	if err != nil {
-		error_s := err.Error()
-		fmt.Printf("Invalid JSON object. Error is : %s", err)
-		return nil, errors.New(error_s)
-	}
-
+	s, err := t.song_constructur(stub, caller, caller_affiliation, args)
 	record, err := stub.GetState(s.Song_ID) // If not an error then a record exists so cant create a new car with this Song_ID as it must be unique
 
 	if record != nil {
@@ -529,27 +592,45 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Error saving changes")
 	}
 
-	//gets the structure that contains an array of songs  .. this should probably should be a container of songs for a specific singer and there fore needs
-	//to use a singer ID
-	bytes, err := stub.GetState(karachainKey)
+	//gets the structure that contains an array of songs  ..
+	bytes, err := stub.GetState(SongKey)
 
 	if err != nil {
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Song_IDs Song_Holder // Hold an array of song IDs
+	var Songs Song_Holder // Hold an array of song IDs
+	var Song Song_basics
 
-	err = json.Unmarshal(bytes, &Song_IDs)
-
-	if err != nil {
-		return nil, errors.New("Corrupt Song_Holder record") // Not sure what this holder means. Need to check
-	}
-	//TODO: need to add the new song to this container of songs (which is either a list of all songs or for a specific singer)
-	err = stub.PutState(karachainKey, bytes)
+	err = json.Unmarshal(bytes, &Songs)
 
 	if err != nil {
-		return nil, errors.New("Unable to put the state")
+		return nil, errors.New("Corrupt Song_Holder record")
 	}
+	//need to add the new song to this container of songs (which is either a list of all songs or for a specific singer)
+	//	Song_IDs.Song_IDs = append(Song_IDs.Song_IDs, s.Song_ID)
+	//	Song_IDs.Singer_Name = append(Song_IDs.Singer_Name, s.Singer_Name)
+	//	Song_IDs.Song_AVG_Rating = append(Song_IDs.Song_AVG_Rating, "")
+	//	Song_IDs.Song_Name = append(Song_IDs.Song_Name, s.Song_Name)
+	Song.Singer_Name = s.Singer_Name
+	Song.Song_AVG_Rating = ""
+	Song.Song_Name = s.Song_Name
+	Song.Song_ID = s.Song_ID
+	Songs.Songs = append(Songs.Songs, Song)
+
+	bytes, err = json.Marshal(Songs)
+
+	if err != nil {
+		fmt.Print("Error creating Song_Holder record")
+	}
+
+	err = stub.PutState(SongKey, bytes)
+
+	if err != nil {
+		return nil, errors.New("Unable to put the state of Song_Holder")
+	}
+
+	//gets the structure that contains an array of contracts
 
 	// Here we create our composite keys
 
@@ -591,187 +672,6 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 }
 
 //=================================================================================================================================
-//	 Transfer Functions
-//=================================================================================================================================
-//	 singer_to_authority - might be needed to transfer a song from a singer to a copyright authority
-//=================================================================================================================================
-//func (t *SimpleChaincode) singer_to_authority(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if  S.Owner == caller &&
-//		S.Obsolete == false { // If the roles and users are ok
-//
-//		S.Owner = COPYRIGHT_AUTHORITY       // then make the owner the new owner
-//		S.Status = STATE_CONTRACT_ACCEPTED  // and mark it in the state of manufacture
-//
-//	} else { // Otherwise if there is an error
-//		fmt.Printf("singer_to_authority: Permission Denied")
-//		return nil, errors.New(fmt.Sprintf("Permission Denied. singer_to_authority. %v %v %v %v %v ", s, s.Status, v.Owner, caller, caller_affiliation))
-//
-//	}
-//
-//	_, err := t.save_changes(stub, s) // Write new state
-//
-//	if err != nil {
-//		fmt.Printf("singer_to_authority: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil // We are Done
-//
-//}
-//
-
-////=================================================================================================================================
-////	 manufacturer_to_private
-////=================================================================================================================================
-//func (t *SimpleChaincode) manufacturer_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if v.Make == "UNDEFINED" ||
-//		v.Model == "UNDEFINED" ||
-//		v.Reg == "UNDEFINED" ||
-//		v.Colour == "UNDEFINED" ||
-//		v.VIN == 0 { //If any part of the car is undefined it has not bene fully manufacturered so cannot be sent
-//		fmt.Printf("MANUFACTURER_TO_PRIVATE: Car not fully defined")
-//		return nil, errors.New(fmt.Sprintf("Car not fully defined. %v", v))
-//	}
-//
-//	if v.Status == STATE_MANUFACTURE &&
-//		v.Owner == caller &&
-//		caller_affiliation == MANUFACTURER &&
-//		recipient_affiliation == PRIVATE_ENTITY &&
-//		v.Scrapped == false {
-//
-//		v.Owner = recipient_name
-//		v.Status = STATE_PRIVATE_OWNERSHIP
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprintf("Permission Denied. manufacturer_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("MANUFACTURER_TO_PRIVATE: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-//
-////=================================================================================================================================
-////	 private_to_private
-////=================================================================================================================================
-//func (t *SimpleChaincode) private_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
-//		v.Owner == caller &&
-//		caller_affiliation == PRIVATE_ENTITY &&
-//		recipient_affiliation == PRIVATE_ENTITY &&
-//		v.Scrapped == false {
-//
-//		v.Owner = recipient_name
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprintf("Permission Denied. private_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("PRIVATE_TO_PRIVATE: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-//
-////=================================================================================================================================
-////	 private_to_lease_company
-////=================================================================================================================================
-//func (t *SimpleChaincode) private_to_lease_company(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
-//		v.Owner == caller &&
-//		caller_affiliation == PRIVATE_ENTITY &&
-//		recipient_affiliation == LEASE_COMPANY &&
-//		v.Scrapped == false {
-//
-//		v.Owner = recipient_name
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprintf("Permission denied. private_to_lease_company. %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
-//
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//	if err != nil {
-//		fmt.Printf("PRIVATE_TO_LEASE_COMPANY: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-//
-////=================================================================================================================================
-////	 lease_company_to_private
-////=================================================================================================================================
-//func (t *SimpleChaincode) lease_company_to_private(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
-//		v.Owner == caller &&
-//		caller_affiliation == LEASE_COMPANY &&
-//		recipient_affiliation == PRIVATE_ENTITY &&
-//		v.Scrapped == false {
-//
-//		v.Owner = recipient_name
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprintf("Permission Denied. lease_company_to_private. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//	if err != nil {
-//		fmt.Printf("LEASE_COMPANY_TO_PRIVATE: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-//
-////=================================================================================================================================
-////	 private_to_scrap_merchant
-////=================================================================================================================================
-//func (t *SimpleChaincode) private_to_scrap_merchant(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, recipient_name string, recipient_affiliation string) ([]byte, error) {
-//
-//	if v.Status == STATE_PRIVATE_OWNERSHIP &&
-//		v.Owner == caller &&
-//		caller_affiliation == PRIVATE_ENTITY &&
-//		recipient_affiliation == SCRAP_MERCHANT &&
-//		v.Scrapped == false {
-//
-//		v.Owner = recipient_name
-//		v.Status = STATE_BEING_SCRAPPED
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprintf("Permission Denied. private_to_scrap_merchant. %v %v === %v, %v === %v, %v === %v, %v === %v, %v === %v", v, v.Status, STATE_PRIVATE_OWNERSHIP, v.Owner, caller, caller_affiliation, PRIVATE_ENTITY, recipient_affiliation, SCRAP_MERCHANT, v.Scrapped, false))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("PRIVATE_TO_SCRAP_MERCHANT: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-
-//=================================================================================================================================
 //	 Update Functions
 //=================================================================================================================================
 //	 update_song
@@ -801,15 +701,22 @@ func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, 
 //=================================================================================================================================
 func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
 	// Song ID is args[0]
-	var User_rating string = args[1]
-	var User_Id string = args[2]
-	// User = caller
-	var User_role string = AUDIENCE
+	//	var User_rating string = args[1]
+	//	var User_Id string = args[2]
+	//	// User = caller
+	//	var User_role string = AUDIENCE
+	//	var new_user_ratings []string
+	//	match := false
+	//	new_index := 0
+
 	if s.Obsolete != true {
 
-		s.User_rating = User_rating
-		s.User_role = User_role
-		s.User_Id = User_Id
+		//		for index, user := range s.User_Id {
+		//			if user == User_Id {
+		//
+		//			}
+		//
+		//		}
 
 	} else {
 
@@ -844,34 +751,96 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 //=================================================================================================================================
 //	 set_contract - The CA may provide a contract to a singer for a particular song. Only 1 contract allowed per copyright authority
 //=================================================================================================================================
-func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
+	if len(args) < 9 {
+		return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
+	}
+
+	Singer_ID := args[5]
 	Copyright_Id := args[1]
 	Copyright_date_created := args[2]
 	Copyright_Institution_Id := args[3]
 	Copyright_Institution_Name := args[4]
-	SmartContract_Unique_ID := args[5]
+	Contract_date_from := args[6]
+	Contract_date_to := args[7]
+	SmartContract_ID := args[8]
 
-	if s.Obsolete != true {
-
-		s.Copyright_Id = Copyright_Id
-		s.Copyright_date_created = Copyright_date_created
-		s.Copyright_Institution_Id = Copyright_Institution_Id
-		s.Copyright_Institution_Name = Copyright_Institution_Name
-		s.Copyright_State = STATE_CONTRACT_PROVIDED
-		s.SmartContract_Unique_ID = SmartContract_Unique_ID
-	} else {
-
-		return nil, errors.New(fmt.Sprint("Permission denied to set a contract."))
-
+	if Contract_date_from < Contract_date_to {
+		return nil, errors.New("Contract Start date after contract end date. Cannot store contract")
 	}
 
-	_, err := t.save_changes(stub, s)
+	var c Contract
+	c.Contract_date_from = Contract_date_from
+	c.Contract_date_to = Contract_date_to
+	c.Copyright_Id = Copyright_Id
+	c.Copyright_date_created = Copyright_date_created
+	c.Copyright_Institution_Id = Copyright_Institution_Id
+	c.Copyright_Institution_Name = Copyright_Institution_Name
+	c.SmartContract_ID = SmartContract_ID
+
+	var contracts Contract_holder
+
+	bytes, err := stub.GetState(Singer_ID)
 
 	if err != nil {
-		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
-		return nil, errors.New("Error saving changes")
+		// Here we already have a contract and need to check if the new one is valid and can be added
+		err = json.Unmarshal(bytes, &contracts)
+
+		if err != nil {
+			return nil, errors.New("Error getting Contract Holder")
+		}
+		// We check if there is a collision with a contract that was already signed
+		for _, current_c := range contracts.Contracts {
+
+			if current_c.Copyright_State == STATE_CONTRACT_ACCEPTED {
+				if current_c.Contract_date_from < c.Contract_date_from && current_c.Contract_date_to > c.Contract_date_from {
+					return nil, errors.New("Contract already accepeted in that date range. Contract ends in a period within an active contract")
+				}
+
+				if current_c.Contract_date_from > c.Contract_date_from && current_c.Contract_date_from < c.Contract_date_to {
+					return nil, errors.New("Contract already accepeted in that date range. Contract starts in a period within an active contract")
+				}
+
+			}
+
+		}
+		contracts.Contracts = append(contracts.Contracts, c)
+		bytes, err = json.Marshal(contracts)
+		err = stub.PutState(Singer_ID, bytes)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		contracts.Contracts = append(contracts.Contracts, c)
+		bytes, err = json.Marshal(contracts)
+		err = stub.PutState(Singer_ID, bytes)
+		if err != nil {
+			return nil, err
+		}
+
 	}
+
+	//	if s.Obsolete != true {
+	//
+	//		s.Copyright_Id = Copyright_Id
+	//		s.Copyright_date_created = Copyright_date_created
+	//		s.Copyright_Institution_Id = Copyright_Institution_Id
+	//		s.Copyright_Institution_Name = Copyright_Institution_Name
+	//		s.Copyright_State = STATE_CONTRACT_PROVIDED
+	//		s.SmartContract_Unique_ID = SmartContract_Unique_ID
+	//	} else {
+	//
+	//		return nil, errors.New(fmt.Sprint("Permission denied to set a contract."))
+	//
+	//	}
+	//
+	//	_, err := t.save_changes(stub, s)
+	//
+	//	if err != nil {
+	//		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
+	//		return nil, errors.New("Error saving changes")
+	//	}
 
 	// Here we create our composite keys
 
@@ -895,192 +864,101 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, s Song,
 //=================================================================================================================================
 //	 set_contract_response - The singer can either accept or reject a contract.
 //=================================================================================================================================
-func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
-	//Owner                      string `json:"Owner"`
-	var Copyright_decision string = args[1]
-	var Copyright_date_decision string = args[2]
-	// Copyright_State            string `json:"Copyright_State"`
+	if len(args) < 11 {
+		return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
+	}
 
-	if s.Obsolete != true &&
-		s.Copyright_State != STATE_CONTRACT_ACCEPTED {
-		if Copyright_decision == "true" {
-			s.Copyright_State = STATE_CONTRACT_ACCEPTED
-			s.Copyright_date_accepted = Copyright_date_decision
-			s.Owner = s.Copyright_Id
+	Singer_ID := args[5]
+	//	Copyright_Id := args[1]
+	//	Copyright_date_created := args[2]
+	//	Copyright_Institution_Id := args[3]
+	//	Copyright_Institution_Name := args[4]
+	//	Contract_date_from := args[6]
+	//	Contract_date_to := args[7]
+	SmartContract_ID := args[8]
+
+	Copyright_decision := args[9]
+	Copyright_date_decision := args[10]
+	match := false
+
+	//	var c Contract
+	var contracts Contract_holder
+	var new_contract_h Contract_holder
+
+	bytes, err := stub.GetState(Singer_ID)
+
+	if err == nil {
+		// Here we already have a contract and need to check if the new one is valid and can be added
+		err = json.Unmarshal(bytes, &contracts)
+
+		if err != nil {
+			return nil, errors.New("Error getting Contract Holder")
+		}
+		// We check if there is a collision with a contract that was already signed
+		for _, current_c := range contracts.Contracts {
+
+			if current_c.SmartContract_ID == SmartContract_ID { // we found the contract
+				if current_c.Copyright_State != STATE_CONTRACT_ACCEPTED {
+					if Copyright_decision == "true" {
+						current_c.Copyright_State = STATE_CONTRACT_ACCEPTED
+						current_c.Copyright_date_accepted = Copyright_date_decision
+						match = true
+					}
+
+					if Copyright_decision == "false" {
+						current_c.Copyright_date_rejected = Copyright_date_decision
+						current_c.Copyright_State = STATE_CONTRACT_REJECTED
+						match = true
+					}
+				}
+
+			}
+			var new_contract Contract
+			new_contract = current_c
+			new_contract_h.Contracts = append(new_contract_h.Contracts, new_contract)
+
 		}
 
-		if Copyright_decision == "false" {
-			s.Copyright_date_rejected = Copyright_date_decision
-			s.Copyright_State = STATE_CONTRACT_REJECTED
+		if match == true {
+
+			bytes, err = json.Marshal(new_contract_h)
+			err = stub.PutState(Singer_ID, bytes)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, errors.New("Not able to update a contract. Either wrong Smartcontract ID or decision")
 		}
 
 	} else {
-
-		return nil, errors.New(fmt.Sprint("Permission denied to set a contract response."))
-
-	}
-
-	_, err := t.save_changes(stub, s)
-
-	if err != nil {
-		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
-		return nil, errors.New("Error saving changes")
+		return nil, errors.New("Not able to update a contract. Either wrong Smartcontract ID or decision")
 	}
 
 	return nil, nil
-
 }
-
-//=================================================================================================================================
-//	 update_contract - A new contract can be provided by the CA. This again has to be approved or rejected by the singer.
-//=================================================================================================================================
-func (t *SimpleChaincode) update_contract(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-
-	// to be implemented
-	return nil, nil
-
-}
-
-//=================================================================================================================================
-//	 update_rating - A user can update its own rating that was done in the past.
-//=================================================================================================================================
-func (t *SimpleChaincode) update_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-
-	// to be implemented
-	return nil, nil
-
-}
-
-//=================================================================================================================================
-//	 update_registration
-//=================================================================================================================================
-//func (t *SimpleChaincode) update_registration(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-//
-//	if v.Owner == caller &&
-//		caller_affiliation != SCRAP_MERCHANT &&
-//		v.Scrapped == false {
-//
-//		v.Reg = new_value
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprint("Permission denied. update_registration"))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("UPDATE_REGISTRATION: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-
-//=================================================================================================================================
-//	 update_colour
-////=================================================================================================================================
-//func (t *SimpleChaincode) update_colour(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-//
-//	if v.Owner == caller &&
-//		caller_affiliation == MANUFACTURER && /*((v.Owner				== caller			&&
-//		caller_affiliation	== MANUFACTURER)		||
-//		caller_affiliation	== AUTHORITY)			&&*/
-//		v.Scrapped == false {
-//
-//		v.Colour = new_value
-//	} else {
-//
-//		return nil, errors.New(fmt.Sprint("Permission denied. update_colour %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("UPDATE_COLOUR: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-
-//=================================================================================================================================
-//	 update_make
-////=================================================================================================================================
-//func (t *SimpleChaincode) update_make(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-//
-//	if v.Status == STATE_MANUFACTURE &&
-//		v.Owner == caller &&
-//		caller_affiliation == MANUFACTURER &&
-//		v.Scrapped == false {
-//
-//		v.Make = new_value
-//	} else {
-//
-//		return nil, errors.New(fmt.Sprint("Permission denied. update_make %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
-//
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
-
-//=================================================================================================================================
-////	 update_model
-////=================================================================================================================================
-//func (t *SimpleChaincode) update_model(stub shim.ChaincodeStubInterface, v Vehicle, caller string, caller_affiliation string, new_value string) ([]byte, error) {
-//
-//	if v.Status == STATE_MANUFACTURE &&
-//		v.Owner == caller &&
-//		caller_affiliation == MANUFACTURER &&
-//		v.Scrapped == false {
-//
-//		v.Model = new_value
-//
-//	} else {
-//		return nil, errors.New(fmt.Sprint("Permission denied. update_model %t %t %t"+v.Owner == caller, caller_affiliation == MANUFACTURER, v.Scrapped))
-//
-//	}
-//
-//	_, err := t.save_changes(stub, v)
-//
-//	if err != nil {
-//		fmt.Printf("UPDATE_MODEL: Error saving changes: %s", err)
-//		return nil, errors.New("Error saving changes")
-//	}
-//
-//	return nil, nil
-//
-//}
 
 //=================================================================================================================================
 //	 Song Obsolete - not sure if we need this function. I have just implemented it if we want to make songs obsolete
 //=================================================================================================================================
-func (t *SimpleChaincode) song_obsolete(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
+func (t *SimpleChaincode) set_obsolete(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string) ([]byte, error) {
 
-	//	if s.Obsolete != true {
-	//
-	//		return nil, errors.New("Cannot make song obsolete. Song is already obsolete")
-	//	} else {
-	//		_, err := t.save_changes(stub, s)
-	//
-	//		if err != nil {
-	//			fmt.Printf("SONG_OBSOLETE: Error saving changes: %s", err)
-	//			return nil, errors.New("SONG_OBSOLETE: Error saving changes")
-	//		} else {
-	//			return nil, nil
-	//
-	//		}
-	//	}
+	if s.Obsolete == false {
+
+		return nil, errors.New("Cannot make song obsolete. Song is already obsolete")
+	} else {
+		s.Obsolete = false
+		_, err := t.save_changes(stub, s)
+
+		if err != nil {
+			fmt.Printf("SONG_OBSOLETE: Error saving changes: %s", err)
+			return nil, errors.New("SONG_OBSOLETE: Error saving changes")
+		} else {
+			return nil, nil
+
+		}
+	}
 
 	return nil, nil
 }
@@ -1108,7 +986,7 @@ func (t *SimpleChaincode) get_song_details(stub shim.ChaincodeStubInterface, s S
 
 func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string) ([]byte, error) {
 	//Get the list of all the song IDs
-	bytes, err := stub.GetState(karachainKey)
+	bytes, err := stub.GetState(SongKey)
 
 	if err != nil {
 		return nil, errors.New("Unable to get Song_IDs")
@@ -1122,33 +1000,37 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 		return nil, errors.New("Corrupt Song")
 	}
 
-	result := "["
+	//	result := "["
+	//
 
-	var temp []byte
-	var s Song
+	//	var temp []byte
+	//	var s Song
 	//loop through song IDs and get the song structures from the ledger
-	for _, songId := range Song_IDs.Song_IDs {
+	//	for index, song := range Song_IDs.Songs {
+	//
+	//		//s, err = t.retrieve_Song_ID(stub, songId)
+	//
+	//		//		if err != nil {
+	//		//			return nil, errors.New("Failed to retrieve Song")
+	//		//		}
+	//
+	//		//temp, err = t.get_song_details(stub, s, caller, caller_affiliation)
+	//
+	//		//		if err == nil {
+	//		//
+	//		//		}
+	//
+	//		result += string(temp) + ","
+	//	}
+	//
+	//	if len(result) == 1 {
+	//		result = "[]"
+	//	} else {
+	//		result = result[:len(result)-1] + "]"
+	//	}
 
-		s, err = t.retrieve_Song_ID(stub, songId)
-
-		if err != nil {
-			return nil, errors.New("Failed to retrieve Song")
-		}
-
-		temp, err = t.get_song_details(stub, s, caller, caller_affiliation)
-
-		if err == nil {
-			result += string(temp) + ","
-		}
-	}
-
-	if len(result) == 1 {
-		result = "[]"
-	} else {
-		result = result[:len(result)-1] + "]"
-	}
-
-	return []byte(result), nil
+	//	return []byte(result), nil
+	return bytes, nil
 }
 
 //=================================================================================================================================
