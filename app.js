@@ -157,15 +157,7 @@ var ws = require('ws');																			//websocket mod
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');														//rest based SDK for ibm blockchain
 var ibc = new Ibc1();
-//Rest interface
-//QR image service
-app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
-	console.log("getqrcode",req.params) ; 
-	var code = karachainsvc.genQRCode(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
-	  //var code = qr.image("Love Shack", { type: 'png' });
-	  res.type('png');
-	  code.pipe(res);
-	});
+
 //
 // ==================================
 // load peers manually or from VCAP, VCAP will overwrite hardcoded list!
@@ -456,3 +448,17 @@ function cb_deployed(e){
 		});
 	}
 }
+//Rest interface
+function genQRpng(singerName, perfName,singerId, perfId,perfDate){
+	var qrstring = "{Singer Name:"+singerName+"Performance Name:"+perfName+"Singer ID:"+singerId+"Performance Date:"+perfDate+"}";
+	var qr_png = qr.image(qrstring, { type: 'png' });
+	return gr_png;
+}
+//QR image service
+app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
+	console.log("getqrcode",req.params) ; 
+	var code = genQRpng(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
+	  //var code = qr.image("Love Shack", { type: 'png' });
+	  res.type('png');
+	  code.pipe(res);
+	});
