@@ -33,15 +33,7 @@ user_type8_2c0b47a9471
 user_type8_3973dcda0b8
 user_type8_4ae3d1e2132
  */
-function genQRcode(singerName, perfName,singerId, perfId,perfDate){
-	var qrstring = "{Singer Name:"+singerName+"Performance Name:"+perfName+"Singer ID:"+singerId+"Performance Date:"+perfDate+"}";
-	var qr_png = qr.image(qrstring, { type: 'png' });
-	var qrobj ={
-			songid:songId,
-			qr:qr_png
-	};
-	return qrobj
-}
+
 module.exports.setup = function(sdk, cc, qrsvc){
 	console.log("karachain setup");
 	ibc = sdk;
@@ -50,7 +42,16 @@ module.exports.setup = function(sdk, cc, qrsvc){
 	
 };
 module.exports.genQRcode = function(singerName, perfName,singerId, perfId,perfDate){
-	return genQRCode(singerName, perfName,singerId, perfId,perfDate);
+	return genQRpng(singerName, perfName,singerId, perfId,perfDate);
+	function genQRpng(singerName, perfName,singerId, perfId,perfDate){
+		var qrstring = "{Singer Name:"+singerName+"Performance Name:"+perfName+"Singer ID:"+singerId+"Performance Date:"+perfDate+"}";
+		var qr_png = qr.image(qrstring, { type: 'png' });
+		var qrobj ={
+				songid:songId,
+				qr:qr_png
+		};
+		return gr_png;
+	}
 	
 };
 /*Go code
