@@ -452,7 +452,7 @@ function cb_deployed(e){
 function genQRpng(singerName, perfName,singerId, perfId,perfDate){
 	var qrstring = "{Singer Name:"+singerName+"Performance Name:"+perfName+"Singer ID:"+singerId+"Performance Date:"+perfDate+"}";
 	var qr_png = qr.image(qrstring, { type: 'png' });
-	return gr_png;
+	return qr_png;
 }
 //QR image service
 app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
