@@ -112,7 +112,7 @@ module.exports.process_msg = function(wssvc, data){
 			chaincode.query.read([songId], cb_query_response);
 			
 			console.log('karachain: create performance - gen qr code ',songId);
-			var qr_png = genQRCode(data.singerName, data.perfName,data.singerid, data.songId,data.date);
+			var qr_png = genQRpng(data.singerName, data.perfName,data.singerid, data.songId,data.date);
 			var qrjson ={
 					songid:songId,
 					qr:qr_png
