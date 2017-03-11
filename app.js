@@ -101,7 +101,23 @@ app.use(function(err, req, res, next) {														// = development error hand
 	res.render('template/error', {bag:req.bag});
 });
 
+var qr = require('qr-image');  
+var express = require('express');
 
+var app = express();
+
+app.get('/', function(req, res) {  
+  var code = qr.image(new Date().toString(), { type: 'svg' });
+  res.type('svg');
+  code.pipe(res);
+});
+
+//QR image service
+app.get('/getqrcode', function(req, res) {  
+	  var code = qr.image("Love Shack", { type: 'png' });
+	  res.type('png');
+	  code.pipe(res);
+	});
 // ============================================================================================================================
 // 														Launch Webserver
 // ============================================================================================================================
