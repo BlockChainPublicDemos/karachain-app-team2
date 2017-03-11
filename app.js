@@ -160,7 +160,7 @@ var ibc = new Ibc1();
 //Rest interface
 //QR image service
 app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
-	  var code = karachainsvc.genQRCode(singerName, songname,singerId, songId,perfDate);
+	  var code = karachainsvc.genQRCode(singername, songname,singerId, songId,perfDate);
 	  //var code = qr.image("Love Shack", { type: 'png' });
 	  res.type('png');
 	  code.pipe(res);
