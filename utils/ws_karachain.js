@@ -33,12 +33,24 @@ user_type8_2c0b47a9471
 user_type8_3973dcda0b8
 user_type8_4ae3d1e2132
  */
-
+function genQRcode(singerName, perfName,singerId, perfId,perfDate){
+	var qrstring = "{Singer Name:"+singerName+"Performance Name:"+perfName+"Singer ID:"+singerId+"Performance Date:"+perfDate+"}";
+	var qr_png = qr.image(qrstring, { type: 'png' });
+	var qrobj ={
+			songid:songId,
+			qr:qr_png
+	};
+	return qrobj
+}
 module.exports.setup = function(sdk, cc, qrsvc){
 	console.log("karachain setup");
 	ibc = sdk;
 	chaincode = cc;
 	qr = qrsvc;
+	
+};
+module.exports.genQRcode = function(singerName, perfName,singerId, perfId,perfDate){
+	return genQRCode(singerName, perfName,singerId, perfId,perfDate);
 	
 };
 /*Go code
@@ -85,25 +97,28 @@ module.exports.process_msg = function(wssvc, data){
 			console.log('karachain svc: create performance - singer singing song');
 			//{"type" : "createperformance","name":"rocknroll", "venue":"lazy dog", "date":"undefined","singer": "bob","v":1}
 			//data.name data.date data.singer data.videoid, data.videourl data.videoqrcode data.venuid data.venue 
+			
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
-			var qr_png = qr.imageSync(songId, { type: 'png' });
-			var qrjson ={
-					songid:songId,
-					qr:qr_png
-			};
-			//qr.image(songId, { type: 'png' });
 			data.videoid = "vd"+Math.round(Math.pow(10,7)*Math.random());
 			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
 			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
 			data.singerid = lastSingerId;
+			data.singerName = "Mary";
+			data.perfName = "RockNRoll";
 			
 			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue,data.singerid], cb_invoked);	//create a new song		
+			
 			console.log('karachain svc: create performance - reading song back ',songId);
 			lastSongId = songId;
 			chaincode.query.read([songId], cb_query_response);
-			console.log('karachain: create performance - submitted song query ',songId);
-		
+			
+			console.log('karachain: create performance - gen qr code ',songId);
+			var qr_png = genQRCode(data.singerName, data.perfName,data.singerid, data.songId,data.date);
+			var qrjson ={
+					songid:songId,
+					qr:qr_png
+			};
 			sendMsg(qrjson);
 		}
 		else if(data.type == 'createvisitor'){

@@ -112,12 +112,7 @@ app.get('/', function(req, res) {
   code.pipe(res);
 });
 
-//QR image service
-app.get('/getqrcode', function(req, res) {  
-	  var code = qr.image("Love Shack", { type: 'png' });
-	  res.type('png');
-	  code.pipe(res);
-	});
+
 // ============================================================================================================================
 // 														Launch Webserver
 // ============================================================================================================================
@@ -162,7 +157,15 @@ var ws = require('ws');																			//websocket mod
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');														//rest based SDK for ibm blockchain
 var ibc = new Ibc1();
-
+//Rest interface
+//QR image service
+app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate'), function(req, res) {  
+	  var code = karachainsvc.genQRCode(singerName, songname,singerId, songId,perfDate);
+	  //var code = qr.image("Love Shack", { type: 'png' });
+	  res.type('png');
+	  code.pipe(res);
+	});
+//
 // ==================================
 // load peers manually or from VCAP, VCAP will overwrite hardcoded list!
 // ==================================
