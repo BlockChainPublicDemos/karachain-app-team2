@@ -154,10 +154,6 @@ type User_and_eCert struct {
 //==============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	//Args
-	//				0
-	//			peer_address
-	//var Aval int
 	var err error
 	fmt.Printf("INIT: Karachain function: %s ", function)
 	//test chaincode
