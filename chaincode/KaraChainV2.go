@@ -875,21 +875,21 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 //=================================================================================================================================
 func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
-	if len(args) != 11 {
+	if len(args) != 4 {
 		return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
 	}
 
-	Singer_ID := args[5]
+	Singer_ID := args[0]
 	//	Copyright_Id := args[1]
 	//	Copyright_date_created := args[2]
 	//	Copyright_Institution_Id := args[3]
 	//	Copyright_Institution_Name := args[4]
 	//	Contract_date_from := args[6]
 	//	Contract_date_to := args[7]
-	SmartContract_ID := args[8]
+	SmartContract_ID := args[1]
 
-	Copyright_decision := args[9]
-	Copyright_date_decision := args[10]
+	Copyright_decision := args[2]
+	Copyright_date_decision := args[3]
 	match := false
 
 	//	var c Contract
