@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"regexp"
-	//"strconv"
+	"strconv"
 	//	"strings"
 	//	"time"
 )
@@ -80,10 +80,10 @@ type Song struct {
 	//User_role   []string `json:"User_role"`
 	//User_rating []string `json:"User_rating"`
 	User_rating map[string]int
-	Obsolete    bool   `json:"Obsolete"`
-	Status      string `json:"Status"`
-	Song_Name   string `json:"Song_Name"`
-	AVG_Rating  string `json:"AVG_Rating"`
+	Obsolete    bool    `json:"Obsolete"`
+	Status      string  `json:"Status"`
+	Song_Name   string  `json:"Song_Name"`
+	AVG_Rating  float32 `json:"AVG_Rating"`
 	//	Contract_date_from         string   `json:"Contract_date_from"`
 	//	Contract_date_to           string   `json:"Contract_date_to"`
 }
@@ -241,7 +241,7 @@ func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, cal
 		return s, errors.New("Invalid Song_ID provided")
 	}
 
-	if len(args) < 10 {
+	if len(args) == 11 {
 		s.Song_ID = args[0]
 		s.Date_created = args[1]
 		s.Singer_Id = args[8]
@@ -257,7 +257,7 @@ func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, cal
 		s.Obsolete = false
 		s.Status = "UNDEFINED"
 		s.Song_Name = args[10]
-		s.AVG_Rating = "UNDEFINED"
+		s.AVG_Rating = 0.0
 	} else {
 		return s, errors.New("Not enough attributes to create a song")
 	}
@@ -424,7 +424,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		if function == "Set_Rating" { // Rating can be set by anybody, but only once and not by the singer
 			return t.set_rating(stub, s, caller, caller_affiliation, args)
 		} else if function == "update_song" { // Function may only be called by the singer
-			return t.update_song(stub, s, caller, caller_affiliation, args[0])
+			return t.update_song(stub, s, caller, caller_affiliation, args)
+		} else if function == "set_obsolete" { // Function may only be called by the singer
+			return t.set_obsolete(stub, s, caller, caller_affiliation)
 		}
 		//		else if function == "set_obsolete" { // Function may only be called by the singer
 		//			return t.set_obsolete(stub, s, caller, caller_affiliation, args[0])
@@ -467,9 +469,11 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		}
 		return t.get_song_details(stub, s, caller, caller_affiliation)
 	} else if function == "Get_Rating" {
-		return t.get_rating(stub, args[0], caller, caller_affiliation) // A user should be able to get his own rating that was made in the past for a particular song
+		return t.get_rating(stub, caller, caller_affiliation, args) // A user should be able to get his own rating that was made in the past for a particular song
 	} else if function == "Get_Contract" { // Only allowed for singer or copyright authority to see the latest contract
-		return t.get_contract(stub, args[0], caller, caller_affiliation)
+		return t.get_contract(stub, caller, caller_affiliation, args)
+	} else if function == "Get_Contracts" { // Only allowed for singer or copyright authority to see the latest contract
+		return t.get_contracts(stub, args[0], caller, caller_affiliation)
 	} else if function == "Get_overall_Rating" { //Anybody should be able to see the overall (average) rating of a song
 		return t.get_overall_rating(stub, args[0], caller, caller_affiliation)
 	} else if function == "Get_Songs" {
@@ -478,32 +482,9 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.get_ecert(stub, args[0])
 	} else if function == "ping" {
 		return t.ping(stub)
-	} else if function == "read" { //read a variable
-		return t.read(stub, args)
 	}
 	return nil, errors.New("Received unknown function invocation " + function)
 
-}
-
-// ============================================================================================================================
-// Read - read a variable from chaincode state
-// ============================================================================================================================
-func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var name, jsonResp string
-	var err error
-
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting name of the var to query")
-	}
-
-	name = args[0]
-	valAsbytes, err := stub.GetState(name) //get the var from chaincode state
-	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
-		return nil, errors.New(jsonResp)
-	}
-
-	return valAsbytes, nil //send it onward
 }
 
 //=================================================================================================================================
@@ -677,13 +658,34 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 //=================================================================================================================================
 //	 update_song
 //=================================================================================================================================
-func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, new_value string) ([]byte, error) {
+func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
 	var err error
 	if s.Obsolete == true {
 
 		return nil, errors.New(fmt.Sprintf("Song is obsolete and cannot be updated."))
 
+	}
+
+	if len(args) == 11 {
+		//s.Song_ID = args[0]
+		s.Date_created = args[1]
+		s.Singer_Id = args[8]
+		s.Video_Id = args[2]
+		s.Video_Link = args[3]
+		s.Video_date_created = args[4]
+		s.Video_QR_code_Id = args[5]
+		s.Singer_Name = args[9]
+		s.Venue_Id = args[6]
+		s.Venue_Name = args[7]
+		//		s.User_Id = "UNDEFINED"
+		//		s.User_role = "UNDEFINED"
+		s.Obsolete = false
+		//s.Status = "UNDEFINED"
+		s.Song_Name = args[10]
+		//s.AVG_Rating = "UNDEFINED"
+	} else {
+		return nil, errors.New("Not enough attributes to create a song")
 	}
 
 	_, err = t.save_changes(stub, s) // Save the changes in the blockchain
@@ -702,16 +704,26 @@ func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, 
 //=================================================================================================================================
 func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, caller string, caller_affiliation string, args []string) ([]byte, error) {
 	// Song ID is args[0]
-	//	var User_rating string = args[1]
-	//	var User_Id string = args[2]
+	//var User_rating int = int(args[1])
+	var User_Id string = args[2]
+	User_rating, err := strconv.Atoi(args[1])
+	if err != nil {
+		// handle error
+		return nil, err
+	}
 	//	// User = caller
 	//	var User_role string = AUDIENCE
 	//	var new_user_ratings []string
 	//	match := false
 	//	new_index := 0
-
+	var sum int
 	if s.Obsolete != true {
 
+		s.User_rating[User_Id] = User_rating
+		for _, value := range s.User_rating {
+			sum = sum + value
+		}
+		s.AVG_Rating = float32((sum / len(s.User_rating)))
 		//		for index, user := range s.User_Id {
 		//			if user == User_Id {
 		//
@@ -725,10 +737,10 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 
 	}
 
-	_, err := t.save_changes(stub, s)
+	_, err2 := t.save_changes(stub, s)
 
-	if err != nil {
-		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err)
+	if err2 != nil {
+		fmt.Printf("UPDATE_MAKE: Error saving changes: %s", err2)
 		return nil, errors.New("Error saving changes")
 	}
 
@@ -754,7 +766,7 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 //=================================================================================================================================
 func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
-	if len(args) < 9 {
+	if len(args) != 9 {
 		return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
 	}
 
@@ -867,7 +879,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 //=================================================================================================================================
 func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 
-	if len(args) < 11 {
+	if len(args) != 11 {
 		return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
 	}
 
@@ -934,7 +946,7 @@ func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface
 		}
 
 	} else {
-		return nil, errors.New("Not able to update a contract. Either wrong Smartcontract ID or decision")
+		return nil, errors.New("Error unmarshaling")
 	}
 
 	return nil, nil
@@ -990,16 +1002,17 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 	bytes, err := stub.GetState(SongKey)
 
 	if err != nil {
-		return nil, errors.New("Unable to get Song_IDs")
+		return nil, errors.New("Unable to get Songs")
 	}
+	return bytes, nil
 
-	var Song_IDs Song_Holder
-
-	err = json.Unmarshal(bytes, &Song_IDs)
-
-	if err != nil {
-		return nil, errors.New("Corrupt Song")
-	}
+	//	var Song_IDs Song_Holder
+	//
+	//	err = json.Unmarshal(bytes, &Song_IDs)
+	//
+	//	if err != nil {
+	//		return nil, errors.New("Corrupt Song")
+	//	}
 
 	//	result := "["
 	//
@@ -1031,7 +1044,7 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 	//	}
 
 	//	return []byte(result), nil
-	return bytes, nil
+
 }
 
 //=================================================================================================================================
@@ -1049,25 +1062,109 @@ func (t *SimpleChaincode) check_unique_Song_ID(stub shim.ChaincodeStubInterface,
 //=================================================================================================================================
 //	 Get_rating - Read the rating that was done by a user for a certain song
 //=================================================================================================================================
-func (t *SimpleChaincode) get_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+func (t *SimpleChaincode) get_rating(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
 	// to be implemented
+	var Song_ID = args[0]
+	var User_Id string = args[1]
+
+	s, err := t.retrieve_Song_ID(stub, Song_ID)
+
+	if err != nil {
+		fmt.Printf("INVOKE: Error retrieving Song: %s", err)
+		return nil, errors.New("Error retrieving Song")
+	}
+	if s.Obsolete != true {
+		rating := s.User_rating[User_Id]
+		if rating == 0 {
+			return nil, errors.New("No rating found")
+		} else {
+			bytes, err2 := json.Marshal(rating)
+			if err2 != nil {
+				return nil, errors.New("Error marshaling rating")
+			}
+			return bytes, nil
+		}
+
+	} else {
+
+		return nil, errors.New(fmt.Sprint("Permission denied, song is obslete."))
+
+	}
+
 	return nil, nil
 }
 
 //=================================================================================================================================
-//	 Get_overall_rating - Calculate the average rating of a song
+//	 Get_overall_rating - Returns the average rating of a song
 //=================================================================================================================================
 func (t *SimpleChaincode) get_overall_rating(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
-	// to be implemented
+
+	s, err := t.retrieve_Song_ID(stub, Song_ID)
+
+	if err != nil {
+		fmt.Printf("INVOKE: Error retrieving Song: %s", err)
+		return nil, errors.New("Error retrieving Song")
+	}
+	if s.Obsolete != true {
+		overall_rating := s.AVG_Rating
+
+		bytes, err2 := json.Marshal(overall_rating)
+		if err2 != nil {
+			return nil, errors.New("Error marshaling rating")
+		}
+		return bytes, nil
+
+	} else {
+
+		return nil, errors.New(fmt.Sprint("Permission denied, song is obslete."))
+
+	}
+
 	return nil, nil
 }
 
 //=================================================================================================================================
-//	 Get_contract - If a contract was provided, it can be shown to the singer or CA
+//	 Get_contract - Provides a specific contract for a specific singer
 //=================================================================================================================================
-func (t *SimpleChaincode) get_contract(stub shim.ChaincodeStubInterface, Song_ID string, caller string, caller_affiliation string) ([]byte, error) {
+func (t *SimpleChaincode) get_contract(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) ([]byte, error) {
+	Singer_ID := args[0]
+	SmartContract_ID := args[1]
+	bytes, err := stub.GetState(Singer_ID)
+	var contracts Contract_holder
+
+	if err != nil {
+		return nil, errors.New("Unable to get contracts for singer")
+	}
+	err = json.Unmarshal(bytes, &contracts)
+
+	for _, current_c := range contracts.Contracts {
+
+		if current_c.SmartContract_ID == SmartContract_ID {
+			bytes, err := json.Marshal(current_c)
+			if err != nil {
+				return nil, errors.New("Unable to marshal contract")
+			}
+			return bytes, nil
+
+		}
+
+	}
+	return nil, errors.New("Unable to get contracts for singer")
+
+}
+
+//=================================================================================================================================
+//	 Get_contracts - Provides all contracts of a singer
+//=================================================================================================================================
+func (t *SimpleChaincode) get_contracts(stub shim.ChaincodeStubInterface, Singer_ID string, caller string, caller_affiliation string) ([]byte, error) {
 	// to be implemented
-	return nil, nil
+
+	bytes, err := stub.GetState(Singer_ID)
+
+	if err != nil {
+		return nil, errors.New("Unable to get contracts for singer")
+	}
+	return bytes, nil
 }
 
 //=================================================================================================================================
