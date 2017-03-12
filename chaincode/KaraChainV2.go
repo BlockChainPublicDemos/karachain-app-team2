@@ -235,7 +235,6 @@ func (t *SimpleChaincode) get_ecert(stub shim.ChaincodeStubInterface, name strin
 func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, caller string, caller_affiliation string, args []string) (Song, error) {
 
 	var s Song
-
 	s.User_rating = make(map[string]int)
 	if args[0] == "" {
 		fmt.Printf("CREATE_SONG: Invalid Song_ID provided")
