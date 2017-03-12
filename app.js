@@ -457,7 +457,7 @@ function genQRpng(singerName, perfName,singerId, perfId,perfDate){
 //QR image service
 app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
 	console.log("getqrcode",req.params) ; 
-	var code = genQRpng(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
+	var code = karachainsvc.genQRcode(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
 	  //var code = qr.image("Love Shack", { type: 'png' });
 	  res.type('png');
 	  code.pipe(res);

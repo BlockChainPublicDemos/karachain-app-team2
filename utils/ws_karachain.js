@@ -10,6 +10,7 @@ var performances = [];
 var lastSongId = "kc846908"; //placeholder value
 var lastSingerId = "user_type1_1";
 var lastVisitorId = "user_type2_0";
+var qrMap = {};
 /**
  * admine0e2435d74
 WebAppAdmin502f66b484
