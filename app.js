@@ -153,6 +153,7 @@ require('cf-deployment-tracker-client').track();		//reports back to us, this hel
 //var part1 = require('./utils/ws_part1');														//websocket message processing for part 1
 //var part2 = require('./utils/ws_part2');														//websocket message processing for part 2
 var karachainsvc = require('./utils/ws_karachain');	
+var qrManager = require('./utils/qrManager');	
 var ws = require('ws');																			//websocket mod
 var wss = {};
 var Ibc1 = require('ibm-blockchain-js');														//rest based SDK for ibm blockchain
@@ -246,7 +247,8 @@ var options = 	{
 //						git_url: 'https://github.com/ibm-blockchain/marbles/chaincode'					//GO get http url
 						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
 						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
-						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'
+///						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'
+						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/karachaincc'
 //							zip_url: 'https://github.com/sbedoll/chaincode-marbles/archive/master.zip',		//karachain repo archive
 //							unzip_dir: 'chaincode-marbles-master/chaincode',													//subdirectroy name of chaincode after unzipped
 //							git_url: 'https://github.com/sbedoll/chaincode-marbles/chaincode'//karachain repo
@@ -273,7 +275,7 @@ ibc.load(options, function (err, cc){														//parse/load chaincode, respo
 	else{
 		chaincode = cc;
 		karachainsvc.setup(ibc, cc,qr);																//pass the cc obj to part 1 node code															//pass the cc obj to part 2 node code
-
+		qrManager.setup(qr);
 		// ---- To Deploy or Not to Deploy ---- //
 		if(!cc.details.deployed_name || cc.details.deployed_name === ''){					//yes, go deploy
 			cc.deploy('init', ['99'], {delay_ms: 60000}, function(e){ 						//delay_ms is milliseconds to wait after deploy for conatiner to start, 50sec recommended
@@ -457,7 +459,7 @@ function genQRpng(singerName, perfName,singerId, perfId,perfDate){
 //QR image service
 app.get('/getqrcode/singername/:singerName/songname/:songName/singerId/:singerId/songId/:songId/perfDate/:perfDate', function(req, res) {  
 	console.log("getqrcode",req.params) ; 
-	var code = karachainsvc.genQRcode(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
+	var code = qrManager.genQRcode(req.params.singerName, req.params.songName,req.params.singerId, req.params.songId,req.params.perfDate);
 	  //var code = qr.image("Love Shack", { type: 'png' });
 	  res.type('png');
 	  code.pipe(res);
