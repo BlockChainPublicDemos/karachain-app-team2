@@ -247,7 +247,8 @@ var options = 	{
 //						git_url: 'https://github.com/ibm-blockchain/marbles/chaincode'					//GO get http url
 						zip_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/archive/master.zip',		//karachain repo archive
 						unzip_dir: 'karachain-app-team2-master/chaincode',													//subdirectroy name of chaincode after unzipped
-						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'
+///						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/chaincode'
+						git_url: 'https://github.com/BlockChainPublicDemos/karachain-app-team2/karachaincc'
 //							zip_url: 'https://github.com/sbedoll/chaincode-marbles/archive/master.zip',		//karachain repo archive
 //							unzip_dir: 'chaincode-marbles-master/chaincode',													//subdirectroy name of chaincode after unzipped
 //							git_url: 'https://github.com/sbedoll/chaincode-marbles/chaincode'//karachain repo
