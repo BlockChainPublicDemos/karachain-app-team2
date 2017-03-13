@@ -171,18 +171,18 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 
 	//
 
-//	var Song_IDs Song_Holder
-//
-//	bytes, err := json.Marshal(Song_IDs)
-//
-//	if err != nil {
-//		return nil, errors.New("Error creating initial song placeholders")
-//	}
-//
-//	err = stub.PutState(SongKey, bytes)
-//	if err != nil {
-//		return nil, err
-//	}
+	var Song_IDs Song_Holder
+
+	bytes, err := json.Marshal(Song_IDs)
+
+	if err != nil {
+		return nil, errors.New("Error creating initial song placeholders")
+	}
+
+	err = stub.PutState(SongKey, bytes)
+	if err != nil {
+		return nil, err
+	}
 	return nil, nil
 
 	//	var Contracts Contract_Holder
@@ -432,7 +432,26 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 
 	}
 }
+//============================================================================================================================
+//Read - read a variable from chaincode state - required for chaincode installation test
+//============================================================================================================================
+func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var name, jsonResp string
+	var err error
 
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting name of the var to query")
+	}
+
+	name = args[0]
+	valAsbytes, err := stub.GetState(name)									//get the var from chaincode state
+	if err != nil {
+		jsonResp = "{\"Error\":\"Failed to get state for " + name + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	return valAsbytes, nil													//send it onward
+}
 //=================================================================================================================================
 //	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
 //  		initial arguments passed are passed on to the called function.
@@ -478,6 +497,8 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.get_ecert(stub, args[0])
 	} else if function == "ping" {
 		return t.ping(stub)
+	}else if function == "read" { //read a variable
+			return t.read(stub, args)
 	}
 	return nil, errors.New("Received unknown function invocation " + function)
 
@@ -1167,9 +1188,9 @@ func (t *SimpleChaincode) get_contracts(stub shim.ChaincodeStubInterface, Singer
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
 func main() {
-
+	fmt.Printf("Karachain main initializing .. \n")
 	err := shim.Start(new(SimpleChaincode))
-
+	
 	if err != nil {
 		fmt.Printf("Error starting Chaincode: %s", err)
 	}
