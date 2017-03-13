@@ -38,7 +38,7 @@ const STATE_CONTRACT_ACCEPTED = "6"
 const STATE_OBSOLETE = "7"
 
 //==============================================================================================================================
-//	 Structure Definitions
+//	 Structure Definitions 
 //==============================================================================================================================
 //	Chaincode - A blank struct for use with Shim (A HyperLedger included go file used for get/put state
 //				and other HyperLedger functions)
