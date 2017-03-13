@@ -7,8 +7,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	//"regexp"
 	"strconv"
-	//	"strings"
-	//	"time"
+	//"strings"
+	//"time"
 )
 
 var logger = shim.NewLogger("CLDChaincode")
@@ -21,7 +21,7 @@ var logger = shim.NewLogger("CLDChaincode")
 const AUTHORITY = "regulator"
 const SINGER = "singer"
 const AUDIENCE = "AUDIENCE"
-const COPYRIGHT_AUTHORITY = "copyright_authority "
+const COPYRIGHT_AUTHORITY = "copyright_authority"
 
 //==============================================================================================================================
 //	 Status types - Asset lifecycle is broken down into z statuses, this is part of the business logic to determine what can
@@ -719,7 +719,7 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 		for _, value := range s.User_rating {
 			sum = sum + value
 		}
-		s.AVG_Rating = float32((sum / len(s.User_rating)))
+		s.AVG_Rating = float32((float32(sum)) / float32(len(s.User_rating)))
 		//		for index, user := range s.User_Id {
 		//			if user == User_Id {
 		//
@@ -778,7 +778,8 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 	if Contract_date_from < Contract_date_to {
 		return nil, errors.New("Contract Start date after contract end date. Cannot store contract")
 	}
-
+	//	from_date := strings.Split(Contract_date_from, ".")
+	//	to_date := strings.Split(Contract_date_to, ".")
 	var c Contract
 	c.Contract_date_from = Contract_date_from
 	c.Contract_date_to = Contract_date_to
@@ -787,6 +788,21 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 	c.Copyright_Institution_Id = Copyright_Institution_Id
 	c.Copyright_Institution_Name = Copyright_Institution_Name
 	c.SmartContract_ID = SmartContract_ID
+
+	//	if len(from_date) != 3 || len(to_date) != 3 {
+	//		return nil, errors.New("Wrong date format. Cannot store contract")
+	//	}
+
+	//	from_year, err := strconv.Atoi(from_date[2])
+	//	from_month, err := strconv.Atoi(from_date[1])
+	//	from_day, err := strconv.Atoi(from_date[0])
+	//
+	//	to_year, err := strconv.Atoi(to_date[2])
+	//	to_month, err := strconv.Atoi(to_date[1])
+	//	to_day, err := strconv.Atoi(to_date[0])
+	//
+	//	from_time := time.Date(from_year, from_month, from_day, 0, 0, 0, 0, time.UTC)
+	//	to_time := time.Date(to_year, to_month, to_day, 0, 0, 0, 0, time.UTC)
 
 	var contracts Contract_holder
 
@@ -800,20 +816,33 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 			return nil, errors.New("Error getting Contract Holder")
 		}
 		// We check if there is a collision with a contract that was already signed
-		for _, current_c := range contracts.Contracts {
-
-			if current_c.Copyright_State == STATE_CONTRACT_ACCEPTED {
-				if current_c.Contract_date_from < c.Contract_date_from && current_c.Contract_date_to > c.Contract_date_from {
-					return nil, errors.New("Contract already accepeted in that date range. Contract ends in a period within an active contract")
-				}
-
-				if current_c.Contract_date_from > c.Contract_date_from && current_c.Contract_date_from < c.Contract_date_to {
-					return nil, errors.New("Contract already accepeted in that date range. Contract starts in a period within an active contract")
-				}
-
-			}
-
-		}
+		//		for _, current_c := range contracts.Contracts {
+		//
+		//			temp_from_date := strings.Split(current_c.Contract_date_from, ".")
+		//			temp_to_date := strings.Split(current_c.Contract_date_to, ".")
+		//			temp_from_year, err := strconv.Atoi(temp_from_date[2])
+		//			temp_from_month, err := strconv.Atoi(temp_from_date[1])
+		//			temp_from_day, err := strconv.Atoi(temp_from_date[0])
+		//
+		//			temp_to_year, err := strconv.Atoi(temp_to_date[2])
+		//			temp_to_month, err := strconv.Atoi(temp_to_date[1])
+		//			temp_to_day, err := strconv.Atoi(temp_to_date[0])
+		//			temp_from_time := time.Date(temp_from_year, temp_from_month, temp_from_day, 0, 0, 0, 0, time.UTC)
+		//			temp_to_time := time.Date(temp_to_year, temp_to_month, temp_to_day, 0, 0, 0, 0, time.UTC)
+		//
+		//			if current_c.Copyright_State == STATE_CONTRACT_ACCEPTED {
+		//				//if current_c.Contract_date_from < c.Contract_date_from && current_c.Contract_date_to > c.Contract_date_from {
+		//				if temp_from_time < from_time && temp_to_time > from_time {
+		//					return nil, errors.New("Contract already accepeted in that date range. Contract ends in a period within an active contract")
+		//				}
+		//
+		//				if temp_from_time > from_time && temp_from_time < to_time {
+		//					return nil, errors.New("Contract already accepeted in that date range. Contract starts in a period within an active contract")
+		//				}
+		//
+		//			}
+		//
+		//		}
 		contracts.Contracts = append(contracts.Contracts, c)
 		bytes, err = json.Marshal(contracts)
 		err = stub.PutState(Singer_ID, bytes)
