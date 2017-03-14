@@ -529,8 +529,8 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 	if err != nil {
 		return nil, errors.New("Corrupt Song_Holder record")
 	}
-	Songs.Songs[s.Song_ID] = s
-	Songs.Songs
+
+	Songs[s.Song_ID] = s
 
 	bytes, err = json.Marshal(Songs)
 
@@ -626,15 +626,15 @@ func (t *SimpleChaincode) update_song(stub shim.ChaincodeStubInterface, s Song, 
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Songs Song_Holder // Hold an array of song IDs
-	//var Song Song_basics
+	var Songs = make(map[string]Song)
 
 	err = json.Unmarshal(bytes, &Songs)
+
 	if err != nil {
-		return nil, errors.New("Unable to get Song_ID")
+		return nil, errors.New("Corrupt Song_Holder record")
 	}
 
-	Songs.Songs[s.Song_ID] = s
+	Songs[s.Song_ID] = s
 	bytes, err = json.Marshal(Songs)
 
 	if err != nil {
