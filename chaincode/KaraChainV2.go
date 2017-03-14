@@ -520,8 +520,9 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Songs Song_Holder // Hold an array of song IDs
+	//var Songs Song_Holder // Hold an array of song IDs
 	//var Song Song_basics
+	var Songs = make(map[string]Song)
 
 	err = json.Unmarshal(bytes, &Songs)
 
@@ -529,6 +530,7 @@ func (t *SimpleChaincode) create_song(stub shim.ChaincodeStubInterface, caller s
 		return nil, errors.New("Corrupt Song_Holder record")
 	}
 	Songs.Songs[s.Song_ID] = s
+	Songs.Songs
 
 	bytes, err = json.Marshal(Songs)
 
