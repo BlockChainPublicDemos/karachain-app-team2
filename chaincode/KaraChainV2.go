@@ -696,15 +696,15 @@ func (t *SimpleChaincode) set_rating(stub shim.ChaincodeStubInterface, s Song, c
 		return nil, errors.New("Unable to get Song_ID")
 	}
 
-	var Songs Song_Holder // Hold an array of song IDs
-	//var Song Song_basics
+	var Songs = make(map[string]Song)
 
 	err = json.Unmarshal(bytes, &Songs)
+
 	if err != nil {
-		return nil, errors.New("Unable to get Song_ID")
+		return nil, errors.New("Corrupt Song_Holder record")
 	}
 
-	Songs.Songs[s.Song_ID] = s
+	Songs[s.Song_ID] = s
 	bytes, err = json.Marshal(Songs)
 
 	if err != nil {
@@ -759,9 +759,9 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 	Contract_date_to := args[7]
 	SmartContract_ID := args[8]
 
-	if Contract_date_from < Contract_date_to {
-		return nil, errors.New("Contract Start date after contract end date. Cannot store contract")
-	}
+	//	if Contract_date_from < Contract_date_to {
+	//		return nil, errors.New("Contract Start date after contract end date. Cannot store contract")
+	//	}
 	//	from_date := strings.Split(Contract_date_from, ".")
 	//	to_date := strings.Split(Contract_date_to, ".")
 	var c Contract
