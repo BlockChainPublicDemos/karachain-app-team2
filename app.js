@@ -303,7 +303,10 @@ function check_if_deployed(e, attempt){
 	}
 	else{
 		console.log('[preflight check]', attempt, ': testing if Karachain chaincode is ready');
-		chaincode.query.read(['karachain'], function(err, resp){
+		//chaincode.query.read(['karachain'], function(err, resp){
+		//just do ping test .. read keeps getting removed from the chaincode ... arrg!
+		chaincode.invoke.ping([], function(err, resp){
+			console.log('back from ping');
 			var cc_deployed = false;
 			try{
 				if(err == null){	
@@ -312,12 +315,13 @@ function check_if_deployed(e, attempt){
 					if(resp === 'null') cc_deployed = true;									//looks alright, brand new, no songs yet
 					else{
 						var json = JSON.parse(resp);
-						if(json.constructor === Array) cc_deployed = true;					//looks alright, we have songs
+						console.log('back from ping: ',json);
+						//if(json.constructor === Array) cc_deployed = true;					//looks alright, we have songs
 					}
 				}
 				//chaincode.invoke.ping([]);
 				//chaincode.invoke.create_song(["sb0123456"]);	//create a new song		
-				//console.log('back from ping');
+				
 
 			}
 			catch(e){}																		//anything nasty goes here
