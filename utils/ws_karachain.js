@@ -103,10 +103,11 @@ module.exports.process_msg = function(wssvc, data){
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
 			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
 			data.singerid = lastSingerId;
-			data.singerName = "Mary";
+			data.singerName = "Carsten";
 			data.perfName = "RockNRoll";
 			
-			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue,data.singerid], cb_invoked);	//create a new song		
+			
+			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue,data.singerid,data.singerName,data.perfName], cb_invoked);	//create a new song		
 			
 			console.log('karachain svc: create performance - reading song back ',songId);
 			lastSongId = songId;
@@ -122,6 +123,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'createvisitor'){
 			console.log('karachain svc: create visitor');
+			var visitorId = "vs"+Math.round(Math.pow(10,7)*Math.random());
 			
 		}
 		else if(data.type == 'createeventmgr'){
@@ -129,7 +131,7 @@ module.exports.process_msg = function(wssvc, data){
 			
 		} 
 		else if(data.type == 'voteperformance'){
-			console.log('karachain svc: vote performance ',data.songid,data.rating);
+			console.log('karachain svc: vote performance ',data.songid,data.rating,data.visitorid);
 			/**
 			 * Song_IDUser_Rating
 			 * "AA1111127", "5"
@@ -137,7 +139,7 @@ module.exports.process_msg = function(wssvc, data){
 			 */
 			//TODO get data from visitor client
 			//data.rating = 5;
-			//data.songid = lastSongId;  
+			data.songid = lastSongId;  
 			chaincode.invoke.Set_Rating([data.songid,data.rating,lastVisitorId], cb_invoked);	//create a new song		
 		}
 		else if(data.type == 'viewmyperformances'){
@@ -266,6 +268,20 @@ module.exports.process_msg = function(wssvc, data){
 				console.log('[query resonse] got query response:', response);
 			}else{
 				console.log('[query resonse] NULL query response:');
+			}
+		}
+	}
+	//get songs callback
+	function cb_query_songs(e, resonse){
+		if(e != null) {
+			console.log('[query songs error] did not get query response:', e);
+		}else{
+			if (resonse != null){
+				console.log('[query songs resonse] got query response:', response);
+				//build songs json
+			}else{
+				console.log('[query songs resonse] NULL query response:');
+				//build null response json
 			}
 		}
 	}
