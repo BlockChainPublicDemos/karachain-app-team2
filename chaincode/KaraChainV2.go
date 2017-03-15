@@ -793,7 +793,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 	bytes, err := stub.GetState(Singer_ID)
 
 	if err != nil {
-		// Here we already have a contract and need to check if the new one is valid and can be added
+		// Here we do not already have a contract and need to check if the new one is valid and can be added
 		err = json.Unmarshal(bytes, &contracts)
 
 		if err != nil {
@@ -834,6 +834,7 @@ func (t *SimpleChaincode) set_contract(stub shim.ChaincodeStubInterface, caller 
 			return nil, err
 		}
 	} else {
+		err = json.Unmarshal(bytes, &contracts)
 		contracts.Contracts = append(contracts.Contracts, c)
 		bytes, err = json.Marshal(contracts)
 		err = stub.PutState(Singer_ID, bytes)
@@ -1212,7 +1213,7 @@ func main() {
 	err := shim.Start(new(SimpleChaincode))
 
 	if err != nil {
-		fmt.Printf("Error when starting Chaincode: %s", err)
+		fmt.Printf("Error starting Chaincode: %s", err)
 	}
 
 }
