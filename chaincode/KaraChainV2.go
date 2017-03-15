@@ -14,8 +14,7 @@ import (
 var logger = shim.NewLogger("CLDChaincode")
 
 //==============================================================================================================================
-//	 Participant types - Each participant type is mapped to an integer which we use to compare to the value stored in a
-//						 user's eCert
+//	 Participant types - Each participant type is mapped to an integer which we use to compare to the value stored
 //==============================================================================================================================
 //CURRENT WORKAROUND USES ROLES CHANGE WHEN OWN USERS CAN BE CREATED SO THAT IT READ 1, 2, 3, 4, 5
 const AUTHORITY = "regulator"
@@ -57,9 +56,8 @@ var SongKey = "_allsongsindex"
 // 			Key for that structure in the BlockChain is the Song_ID
 //==============================================================================================================================
 type Song struct {
-	Song_ID      string `json:"Song_ID"`
-	Date_created string `json:"Date_created"`
-	//	SmartContract_Unique_ID    string   `json:"SmartContract_Unique_ID"`
+	Song_ID            string `json:"Song_ID"`
+	Date_created       string `json:"Date_created"`
 	Singer_Id          string `json:"Singer_Id"`
 	Singer_Name        string `json:"Singer_Name"`
 	Video_Id           string `json:"Video_Id"`
@@ -69,14 +67,11 @@ type Song struct {
 	Video_QR_code_Id   string `json:"Video_QR_code_Id"`
 	Venue_Id           string `json:"Venue_Id"`
 	Venue_Name         string `json:"Venue_Name"`
-	//User_Id     []string `json:"User_Id"`
-	//User_role   []string `json:"User_role"`
-	//User_rating []string `json:"User_rating"`
-	User_rating map[string]int
-	Obsolete    bool    `json:"Obsolete"`
-	Status      string  `json:"Status"`
-	Song_Name   string  `json:"Song_Name"`
-	AVG_Rating  float32 `json:"AVG_Rating"`
+	User_rating        map[string]int
+	Obsolete           bool    `json:"Obsolete"`
+	Status             string  `json:"Status"`
+	Song_Name          string  `json:"Song_Name"`
+	AVG_Rating         float32 `json:"AVG_Rating"`
 }
 
 //==============================================================================================================================
@@ -133,35 +128,18 @@ type Contract struct {
 }
 
 //==============================================================================================================================
-//	User_and_eCert - Struct for storing the JSON of a user and their ecert
-//==============================================================================================================================
-
-type User_and_eCert struct {
-	Identity string `json:"identity"`
-	eCert    string `json:"ecert"`
-}
-
-//==============================================================================================================================
 //	Init Function - Called when the user deploys the chaincode
 //==============================================================================================================================
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	var err error
 	fmt.Printf("INIT: Karachain function: %s ", function)
-	//test chaincode
-	// Initialize the chaincode
-	//	Aval, err = strconv.Atoi(args[0])
-	//	if err != nil {
-	//		return nil, errors.New("Expecting integer value for asset holding")
-	//	}
 
 	// Write the state to the ledger
 	err = stub.PutState("karachain", []byte(args[0])) //making a test var "karachain", I find it handy to read/write to it right away to test the network
 	if err != nil {
 		return nil, err
 	}
-
-	//
 
 	//var Song_IDs Song_Holder
 	var Song_IDs = make(map[string]Song)
@@ -178,46 +156,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	return nil, nil
 
-	//	var Contracts Contract_Holder
-	//
-	//	bytes_c, err := json.Marshal(Contracts)
-	//
-	//	if err != nil {
-	//		return nil, errors.New("Error creating initial Contract placeholders")
-	//	}
-	//
-	//	err = stub.PutState(SingerKey, bytes_c)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	return nil, nil
-
-	//
-	//	for i := 0; i < len(args); i = i + 2 {
-	//		t.add_ecert(stub, args[i], args[i+1])
-	//	}
-	//
-	//	fmt.Printf("INII: Karachain exit")
-	//	return nil, nil
 }
 
 //==============================================================================================================================
 //	 General Functions
 //==============================================================================================================================
-//	 get_ecert - Takes the name passed and calls out to the REST API for HyperLedger to retrieve the ecert
-//				 for that user. Returns the ecert as retrived including html encoding.
-//==============================================================================================================================
-func (t *SimpleChaincode) get_ecert(stub shim.ChaincodeStubInterface, name string) ([]byte, error) {
-
-	ecert, err := stub.GetState(name)
-
-	if err != nil {
-		return nil, errors.New("Couldn't retrieve ecert for user " + name)
-	}
-
-	return ecert, nil
-}
-
 //==============================================================================================================================
 //	 song_constructor - Creates a song structure and assigns values to it.
 //==============================================================================================================================
@@ -255,22 +198,6 @@ func (t *SimpleChaincode) song_constructur(stub shim.ChaincodeStubInterface, cal
 }
 
 //==============================================================================================================================
-//	 add_ecert - Adds a new ecert and user pair to the table of ecerts
-//==============================================================================================================================
-
-func (t *SimpleChaincode) add_ecert(stub shim.ChaincodeStubInterface, name string, ecert string) ([]byte, error) {
-
-	err := stub.PutState(name, []byte(ecert))
-
-	if err == nil {
-		return nil, errors.New("Error storing eCert for user " + name + " identity: " + ecert)
-	}
-
-	return nil, nil
-
-}
-
-//==============================================================================================================================
 //	 get_caller - Retrieves the username of the user who invoked the chaincode.
 //				  Returns the username as a string.
 //==============================================================================================================================
@@ -299,7 +226,7 @@ func (t *SimpleChaincode) check_affiliation(stub shim.ChaincodeStubInterface) (s
 }
 
 //==============================================================================================================================
-//	 get_caller_data - Calls the get_ecert and check_role functions and returns the ecert and role for the
+//	 get_caller_data - Calls check_role functions and returns the role for the
 //					 name passed.
 //==============================================================================================================================
 
@@ -307,18 +234,12 @@ func (t *SimpleChaincode) get_caller_data(stub shim.ChaincodeStubInterface) (str
 
 	user, err := t.get_username(stub)
 
-	// if err != nil { return "", "", err }
-
-	// ecert, err := t.get_ecert(stub, user);
-
-	// if err != nil { return "", "", err }
-
 	affiliation, err := t.check_affiliation(stub)
 
 	if err != nil {
 		return "", "", err
 	}
-
+	fmt.Sprintf("User and affiliation are %s and %s", user, affiliation)
 	return user, affiliation, nil
 }
 
@@ -375,15 +296,12 @@ func (t *SimpleChaincode) save_changes(stub shim.ChaincodeStubInterface, s Song)
 //	 Router Functions
 //==============================================================================================================================
 //	Invoke - Called on chaincode invoke. Takes a function name passed and calls that function. Converts some
-//		  initial arguments passed to other things for use in the called function e.g. name -> ecert
+//		  initial arguments passed to other things for use in the called function
 //==============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
 	caller, caller_affiliation, err := t.get_caller_data(stub)
 
-	//	for i := 0; i < len(args); i = i + 2 {
-	//		t.add_ecert(stub, args[i], args[i+1])
-	//	}
 	fmt.Printf("INVOKE: Karachain function: %s ", function)
 
 	if err != nil {
@@ -417,9 +335,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		} else if function == "set_obsolete" { // Function may only be called by the singer
 			return t.set_obsolete(stub, s, caller, caller_affiliation)
 		}
-		//		else if function == "set_obsolete" { // Function may only be called by the singer
-		//			return t.set_obsolete(stub, s, caller, caller_affiliation, args[0])
-		//		}
 
 		return nil, errors.New("Function of the name " + function + " doesn't exist.")
 
@@ -432,7 +347,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	//TODO add in authentication and certificate management
 	caller, caller_affiliation, err := t.get_caller_data(stub)
 	if err != nil {
 		fmt.Printf("QUERY: Error retrieving caller details", err)
@@ -467,8 +381,6 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		return t.get_overall_rating(stub, args[0], caller, caller_affiliation)
 	} else if function == "Get_Songs" {
 		return t.get_songs(stub, caller, caller_affiliation)
-	} else if function == "get_ecert" {
-		return t.get_ecert(stub, args[0])
 	} else if function == "ping" {
 		return t.ping(stub)
 	}
@@ -894,14 +806,7 @@ func (t *SimpleChaincode) set_contract_response(stub shim.ChaincodeStubInterface
 	}
 
 	Singer_ID := args[0]
-	//	Copyright_Id := args[1]
-	//	Copyright_date_created := args[2]
-	//	Copyright_Institution_Id := args[3]
-	//	Copyright_Institution_Name := args[4]
-	//	Contract_date_from := args[6]
-	//	Contract_date_to := args[7]
 	SmartContract_ID := args[1]
-
 	Copyright_decision := args[2]
 	Copyright_date_decision := args[3]
 	match := false
@@ -1043,45 +948,6 @@ func (t *SimpleChaincode) get_songs(stub shim.ChaincodeStubInterface, caller str
 		return nil, errors.New("Unable to get Songs")
 	}
 	return bytes, nil
-
-	//	var Song_IDs Song_Holder
-	//
-	//	err = json.Unmarshal(bytes, &Song_IDs)
-	//
-	//	if err != nil {
-	//		return nil, errors.New("Corrupt Song")
-	//	}
-
-	//	result := "["
-	//
-
-	//	var temp []byte
-	//	var s Song
-	//loop through song IDs and get the song structures from the ledger
-	//	for index, song := range Song_IDs.Songs {
-	//
-	//		//s, err = t.retrieve_Song_ID(stub, songId)
-	//
-	//		//		if err != nil {
-	//		//			return nil, errors.New("Failed to retrieve Song")
-	//		//		}
-	//
-	//		//temp, err = t.get_song_details(stub, s, caller, caller_affiliation)
-	//
-	//		//		if err == nil {
-	//		//
-	//		//		}
-	//
-	//		result += string(temp) + ","
-	//	}
-	//
-	//	if len(result) == 1 {
-	//		result = "[]"
-	//	} else {
-	//		result = result[:len(result)-1] + "]"
-	//	}
-
-	//	return []byte(result), nil
 
 }
 
