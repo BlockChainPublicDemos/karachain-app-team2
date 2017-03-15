@@ -1079,7 +1079,7 @@ func main() {
 	err := shim.Start(new(SimpleChaincode))
 
 	if err != nil {
-		fmt.Printf("Error starting Chaincode: %s", err)
+		fmt.Printf("Error when starting Chaincode: %s", err)
 	}
 
 }
