@@ -252,6 +252,10 @@ module.exports.process_msg = function(wssvc, data){
 	function cb_invoked(e, a){
 		console.log('invoke response: ', e, a);
 	}
+	//parse chaincode map into js map
+	function jsonToMap(jsonStr) {
+	    return new Map(JSON.parse(jsonStr));
+	}
 	//get songs cb
 	function s(e, songs){
 		if(e != null) {
@@ -259,10 +263,13 @@ module.exports.process_msg = function(wssvc, data){
 		}else{
 			if (songs != null){
 				console.log('[query songs] got query song sresponse:', songs);
+				var smap = jsonToMap(songs);
+				console.log("smap ",smap.prototype.size)
 			}else{
 				console.log('[query songs] NULL query response:');
 			}
 		}
+		
 		sendJson(songs);
 	}
 	//cc query callback
