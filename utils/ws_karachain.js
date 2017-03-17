@@ -111,7 +111,7 @@ module.exports.process_msg = function(wssvc, data){
 			
 			console.log('karachain svc: create performance - reading song back ',songId);
 			lastSongId = songId;
-			chaincode.query.read([songId], cb_query_response);
+			//chaincode.query.read([songId], cb_query_response);
 			
 			console.log('karachain: create performance - gen qr code ',songId);
 			var qr_png = genQRpng(data.singerName, data.perfName,data.singerid, data.songId,data.date);
@@ -152,7 +152,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'viewmyperformance'){
 			console.log('karachain svc: get a performances');
-			chaincode.query.Get_Song(lastSongId);
+			chaincode.query.Get_Song(lastSongId,cb_get_songs);
 			/*
 			 * Song_ID
 			 * "AA1111127"
@@ -226,13 +226,13 @@ module.exports.process_msg = function(wssvc, data){
 				//serialized version
 				async.eachLimit(keys, concurrency, function(key, cb) {
 					console.log('!', json[key]);
-					chaincode.query.read([json[key]], function(e, song) {
-						if(e != null) console.log('[ws error] did not get song:', e);
-						else {
-							if(song) sendMsg({msg: 'songs', e: e, song: JSON.parse(song)});
-							cb(null);
-						}
-					});
+//					chaincode.query.read([json[key]], function(e, song) {
+//						if(e != null) console.log('[ws error] did not get song:', e);
+//						else {
+//							if(song) sendMsg({msg: 'songs', e: e, song: JSON.parse(song)});
+//							cb(null);
+//						}
+//					});
 				}, function() {
 					sendMsg({msg: 'action', e: e, status: 'finished'});
 				});
@@ -272,7 +272,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 	}
 	//get songs callback
-	function (e, response){
+	function cb_get_songs(e, response){
 		if(e != null) {
 			console.log('[query songs error] did not get query response:', e);
 		}else{
