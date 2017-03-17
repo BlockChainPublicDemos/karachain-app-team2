@@ -272,11 +272,11 @@ module.exports.process_msg = function(wssvc, data){
 		}
 	}
 	//get songs callback
-	function cb_query_songs(e, resonse){
+	function cb_query_songs(e, response){
 		if(e != null) {
 			console.log('[query songs error] did not get query response:', e);
 		}else{
-			if (resonse != null){
+			if (response != null){
 				console.log('[query songs resonse] got query response:', response);
 				//build songs json
 			}else{
