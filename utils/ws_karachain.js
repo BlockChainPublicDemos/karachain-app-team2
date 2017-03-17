@@ -144,7 +144,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'viewmyperformances'){
 			console.log('karachain svc: get my performances');
-			chaincode.query.Get_Songs([], cb_query_songs);
+			chaincode.query.Get_Songs([], s);
 			/*
 			 * Song_ID
 			 * "AA1111127"
@@ -152,7 +152,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'viewmyperformance'){
 			console.log('karachain svc: get a performances');
-			chaincode.query.Get_Song(lastSongId, cb_query_songs);
+			chaincode.query.Get_Song(lastSongId, );
 			/*
 			 * Song_ID
 			 * "AA1111127"
@@ -247,12 +247,12 @@ module.exports.process_msg = function(wssvc, data){
 		console.log('invoke response: ', e, a);
 	}
 	//get songs cb
-	function cb_query_songs(e, songs){
+	function s(e, songs){
 		if(e != null) {
 			console.log('[query songs error] did not get query response:', e);
 		}else{
-			if (resonse != null){
-				console.log('[query songs] got query response:', response);
+			if (songs != null){
+				console.log('[query songs] got query song sresponse:', songs);
 			}else{
 				console.log('[query songs] NULL query response:');
 			}
@@ -260,11 +260,11 @@ module.exports.process_msg = function(wssvc, data){
 		sendMsg(songs);
 	}
 	//cc query callback
-	function cb_query_response(e, resonse){
+	function cb_query_response(e, response){
 		if(e != null) {
 			console.log('[query error] did not get query response:', e);
 		}else{
-			if (resonse != null){
+			if (response != null){
 				console.log('[query resonse] got query response:', response);
 			}else{
 				console.log('[query resonse] NULL query response:');
@@ -272,7 +272,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 	}
 	//get songs callback
-	function cb_query_songs(e, response){
+	function (e, response){
 		if(e != null) {
 			console.log('[query songs error] did not get query response:', e);
 		}else{
@@ -312,6 +312,8 @@ module.exports.process_msg = function(wssvc, data){
 		if(ws){
 			try{
 				ws.send(JSON.stringify(json));
+				console.log('[ws send] msg sent',JSON.stringify(json) );
+
 			}
 			catch(e){
 				console.log('[ws error] could not send msg', e);
