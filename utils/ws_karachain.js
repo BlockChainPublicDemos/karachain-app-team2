@@ -152,7 +152,7 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'viewmyperformance'){
 			console.log('karachain svc: get a performances');
-			chaincode.query.Get_Song(lastSongId, );
+			chaincode.query.Get_Song(lastSongId);
 			/*
 			 * Song_ID
 			 * "AA1111127"
