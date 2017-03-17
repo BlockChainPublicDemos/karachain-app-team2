@@ -257,7 +257,7 @@ module.exports.process_msg = function(wssvc, data){
 				console.log('[query songs] NULL query response:');
 			}
 		}
-		sendMsg(songs);
+		sendJson(songs);
 	}
 	//cc query callback
 	function cb_query_response(e, response){
@@ -317,6 +317,18 @@ module.exports.process_msg = function(wssvc, data){
 			}
 			catch(e){
 				console.log('[ws error] could not send msg', e);
+			}
+		}
+	}
+	function sendJson(json){
+		if(ws){
+			try{
+				ws.send(json);
+				console.log('[sendJson ws send] msg sent',json );
+
+			}
+			catch(e){
+				console.log('[sendJson ws error] could not send msg', e);
 			}
 		}
 	}
