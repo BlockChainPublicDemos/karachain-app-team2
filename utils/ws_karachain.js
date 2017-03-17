@@ -99,15 +99,21 @@ module.exports.process_msg = function(wssvc, data){
 			
 			var songId = "kc"+Math.round(Math.pow(10,7)*Math.random());
 			data.videoid = "vd"+Math.round(Math.pow(10,7)*Math.random());
-			data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
+			//data.videourl = "https://www.youtube.com/watch?v=Lsty-LgDNxc";
 			data.venueid = "vu"+Math.round(Math.pow(10,7)*Math.random());
 			data.qrid = "qr"+Math.round(Math.pow(10,7)*Math.random());
 			data.singerid = lastSingerId;
-			data.singerName = "Carsten";
-			data.perfName = "RockNRoll";
+			//data.singerName = "Carsten";
+			//data.perfName = "RockNRoll";
+			//data.performancename
+			//data.performancevideo
+			//data.performancevenue
+			//data.videodate
+			//data.performancedate
+			//data.videourl
 			
 			
-			chaincode.invoke.create_song([songId,data.date,data.videoid, data.videourl,data.date, data.qrid, data.venueid, data.venue,data.singerid,data.singerName,data.perfName], cb_invoked);	//create a new song		
+			chaincode.invoke.create_song([songId,data.videodate,data.videoid, data.performancevideo,data.performancedate, data.qrid, data.venueid, data.performancevenue,data.singerid,data.singerName,data.performancename], cb_invoked);	//create a new song		
 			
 			console.log('karachain svc: create performance - reading song back ',songId);
 			lastSongId = songId;
