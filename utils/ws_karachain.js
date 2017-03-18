@@ -252,25 +252,33 @@ module.exports.process_msg = function(wssvc, data){
 	function cb_invoked(e, a){
 		console.log('invoke response: ', e, a);
 	}
-	//parse chaincode map into js map
-	function jsonToMap(jsonStr) {
-	    return new Map(JSON.parse(jsonStr));
+	//parse chaincode map into json from mobile app
+	function mapToJson(jsonStr) {
+		//var parsed = JSON.parse('{"SONG_ID_001":{"Song_ID":"SONG_ID_001","Date_created":"26.02.2017","Singer_Id":"Singer_ID_123","Singer_Name":"Singer_ANYBODY","Video_Id":"Video_ID_001","Owner":"","Video_Link":"http:123.de","Video_date_created":"26.02.2017","Video_QR_code_Id":"QR_STRING123","Venue_Id":"Venue_ID_001","Venue_Name":"Venue_Name_NY","User_rating":{},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"Song_ANYONE","AVG_Rating":0},"SONG_ID_002":{"Song_ID":"SONG_ID_002","Date_created":"26.02.2017","Singer_Id":"Singer_ID_123","Singer_Name":"Singer_ANYBODY","Video_Id":"Video_ID_001","Owner":"","Video_Link":"http:123.de","Video_date_created":"26.02.2017","Video_QR_code_Id":"QR_STRING123","Venue_Id":"Venue_ID_001","Venue_Name":"Venue_Name_NY","User_rating":{},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"Song_ANYONE","AVG_Rating":0},"kc4059949":{"Song_ID":"kc4059949","Date_created":"http://trotzkowski.de/","Singer_Id":"user_type1_1","Singer_Name":"Carsten","Video_Id":"vd9291200","Owner":"","Video_Link":"https://www.youtube.com/watch?v=Lsty-LgDNxc","Video_date_created":"http://trotzkowski.de/","Video_QR_code_Id":"qr9702995","Venue_Id":"vu6975760","Venue_Name":"internet","User_rating":{"user_type2_0":5},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"RockNRoll","AVG_Rating":5},"kc6508151":{"Song_ID":"kc6508151","Date_created":"01/01/2017","Singer_Id":"user_type1_1","Singer_Na 1me":"Carsten","Video_Id":"vd2326197","Owner":"","Video_Link":"https://www.youtube.com/watch?v=Lsty-LgDNxc","Video_date_created":"01/01/2017","Video_QR_code_Id":"qr746245","Venue_Id":"vu5722680","Venue_Name":"lazy dog","User_rating":{"user_type2_0":5},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"RockNRoll","AVG_Rating":5}}') ;
+	   var parsedSongs = JSON.parse(jsonStr);
+	   console.log("songs: ",Object.keys(parsedSongs) );
+	   var songarray = new Array();
+	   for (var songid in parsedSongs) {
+		   console.log('parsed.' + songid, '=', parsedSongs[songid]);
+		   songarray.push(parsedSongs[songid]);
+		 }
+	  return(JSON.stringify(songarray));
 	}
-	//get songs cb
+	//get songs cb - parse chaincode song map into array of songs for mobile app
 	function s(e, songs){
 		if(e != null) {
 			console.log('[query songs error] did not get query response:', e);
 		}else{
 			if (songs != null){
 				console.log('[query songs] got query song sresponse:', songs);
-				var smap = jsonToMap(songs);
-				console.log("smap ",smap.prototype.size)
+				var sjmap = mapToJson(songs);
+				console.log("[query songs] parsed songs ",sjmap)
 			}else{
 				console.log('[query songs] NULL query response:');
 			}
 		}
 		
-		sendJson(songs);
+		sendJson(sjmap);
 	}
 	//cc query callback
 	function cb_query_response(e, response){
