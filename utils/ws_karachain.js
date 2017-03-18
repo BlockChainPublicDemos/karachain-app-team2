@@ -261,7 +261,7 @@ module.exports.process_msg = function(wssvc, data){
 	   var id = 0;
 	   for (var songid in parsedSongs) {
 		   console.log('parsed.' + songid, '=', parsedSongs[songid]);
-		   parsedSongs.id = id++;
+		   parsedSongs[songid].id = id++;
 		   songarray.push(parsedSongs[songid]);
 		 }
 	  return(JSON.stringify(songarray));
