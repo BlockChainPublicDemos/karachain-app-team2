@@ -258,8 +258,10 @@ module.exports.process_msg = function(wssvc, data){
 	   var parsedSongs = JSON.parse(jsonStr);
 	   console.log("songs: ",Object.keys(parsedSongs) );
 	   var songarray = new Array();
+	   var id = 0;
 	   for (var songid in parsedSongs) {
 		   console.log('parsed.' + songid, '=', parsedSongs[songid]);
+		   parsedSongs.id = id++;
 		   songarray.push(parsedSongs[songid]);
 		 }
 	  return(JSON.stringify(songarray));
