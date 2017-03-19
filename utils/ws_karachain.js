@@ -191,7 +191,7 @@ module.exports.process_msg = function(wssvc, data){
 			data.copywriteid = "cw"+Math.round(Math.pow(10,7)*Math.random());
 			data.copywriteinstid = "ci"+Math.round(Math.pow(10,7)*Math.random());
 			//data.cwrec = "COPYRIGHT_RECORD";
-			//data.singerid = lastSingerId;
+			data.singerid = lastSingerId;
 			//data.date = "01/30/2017";
 			//data.copywritedate = "01/30/2017";
 			//data.copywritestartdate = "01/30/2017";
@@ -212,21 +212,23 @@ module.exports.process_msg = function(wssvc, data){
 		}
 		else if(data.type == 'getmyoffers'){
 			console.log('karachain svc: get my offers');
+			data.singerid = lastSingerId;
+			chaincode.query.Get_Contracts([data.singerid], cb_getoffers);
 			
 		}
 		else if(data.type == 'acceptoffer'){
 			console.log('karachain svc: accept offer');
 			/*
-			 * Song_IDCopyright_decision (“false” or “true”)Copyright decision date
-			 * "AA1111127", "false", "01.01.2017"
 			 * Set_Contract_Response
+			 * singerid, contract id, boolean, date
 			 */
+			data.singerid = lastSingerId;
 			data.songid = lastSongId;
 			data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
 			data.accepted = false;
 			data.date = "01/30/2017";
 			
-			chaincode.invoke.Set_Contract_Response([data.songid,data.accepted,data.date], cb_invoked);	//create a new song		
+			chaincode.invoke.Set_Contract_Response([data.singerid,data.contractid,data.accepted,data.date], cb_invoked);	//create a new song		
 			console.log('karachain svc:accept offer ',data.songid);
 		}
 		else if(data.type == 'transfer'){
@@ -327,6 +329,20 @@ module.exports.process_msg = function(wssvc, data){
 				//build songs json
 			}else{
 				console.log('[query songs resonse] NULL query response:');
+				//build null response json
+			}
+		}
+	}
+	//get songs callback
+	function cb_getoffers(e, response){
+		if(e != null) {
+			console.log('[query contracts error] did not get query response:', e);
+		}else{
+			if (response != null){
+				console.log('[query contracts response] got query response:', response);
+				//build songs json
+			}else{
+				console.log('[query contracts response] NULL query response:');
 				//build null response json
 			}
 		}
