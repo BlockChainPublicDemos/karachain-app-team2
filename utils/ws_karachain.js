@@ -10,6 +10,7 @@ var performances = [];
 var lastSongId = "kc846908"; //placeholder value
 var lastSingerId = "user_type1_1";
 var lastVisitorId = "user_type2_0";
+var lastEvtMgrId = "user_type4_0";
 var qrMap = {};
 /**
  * admine0e2435d74
@@ -165,21 +166,41 @@ module.exports.process_msg = function(wssvc, data){
 			 */
 		}		
 		else if(data.type == 'submitoffer'){
+			/*
+			* if len(args) != 9 {
+					return nil, errors.New("Not enough arguments passed to function. Cannot store contract")
+				}
+			
+				Singer_ID := args[5]
+				Copyright_Id := args[1]
+				Copyright_date_created := args[2]
+				Copyright_Institution_Id := args[3]
+				Copyright_Institution_Name := args[4]
+				Contract_date_from := args[6]
+				Contract_date_to := args[7]
+				SmartContract_ID := args[8]
+			 */
 			console.log('karachain svc: submit offer');
 			/*
-			 * Song_IDCopyright_IDCopyright_Date_createdCopyright_Institution_IDCopyright_Institution_NameSmartContract_Unique_ID
-			 * "AA1111127", "12345", "01.01.2017", "Institution_123", "Dr. Dre Records", "56789"
+			 * "BLANK", "Copyright_Id_001", "26.02.2017", "Copyright_Institution_Id_001", "COPYRIGHT_RECORDS", "SINGER_ID_123", "01.03.2017", "01.04.2017", "SmartContract_ID_001"
 			 */
 			//TODO .. get data from client
-			data.songid = lastSongId;
+			data.blank = " ";
+			//data.songid = lastSongId;
 			data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
 			data.copywriteid = "cw"+Math.round(Math.pow(10,7)*Math.random());
-			data.date = "01/30/2017";
+			data.copywriteinstid = "ci"+Math.round(Math.pow(10,7)*Math.random());
+			//data.cwrec = "COPYRIGHT_RECORD";
+			data.singerid = lastSingerId;
+			//data.date = "01/30/2017";
 			data.copywritedate = "01/30/2017";
-			data.eventmgrid = "em"+Math.round(Math.pow(10,7)*Math.random());
-			data.eventmgrname = "Bob";
+			data.copywritestartdate = "01/30/2017";
+			data.copywriteenddate = "01/30/2017";
+			data.copyright_inst_name = "institution";
+			//data.eventmgrid = "em"+Math.round(Math.pow(10,7)*Math.random());
+			//data.eventmgrname = lastEvtMgrId;
 			
-			chaincode.invoke.Set_Contract([data.songid,data.copywriteid,data.copywritedate, data.eventmgrid,data.eventmgrname, data.contractid], cb_invoked);	//create a new song		
+			chaincode.invoke.Set_Contract([data.songid,data.copywriteid,data.copywritedate,data.copywriteinstid,data.copyright_inst_name,data.singerid, data.copywritestartdate,data.copywriteenddate,data.contractid], cb_invoked);	//create a new song		
 			console.log('karachain svc:submitted offer ',data.songid);
 			
 		}
