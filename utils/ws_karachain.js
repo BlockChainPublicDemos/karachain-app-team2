@@ -191,15 +191,17 @@ module.exports.process_msg = function(wssvc, data){
 			data.copywriteid = "cw"+Math.round(Math.pow(10,7)*Math.random());
 			data.copywriteinstid = "ci"+Math.round(Math.pow(10,7)*Math.random());
 			//data.cwrec = "COPYRIGHT_RECORD";
-			data.singerid = lastSingerId;
+			//data.singerid = lastSingerId;
 			//data.date = "01/30/2017";
-			data.copywritedate = "01/30/2017";
-			data.copywritestartdate = "01/30/2017";
-			data.copywriteenddate = "01/30/2017";
-			data.copyright_inst_name = "institution";
+			//data.copywritedate = "01/30/2017";
+			//data.copywritestartdate = "01/30/2017";
+			//data.copywriteenddate = "01/30/2017";
+			//data.copyright_inst_name = "institution";
 			//data.eventmgrid = "em"+Math.round(Math.pow(10,7)*Math.random());
 			//data.eventmgrname = lastEvtMgrId;
-			
+			/*
+			 * karachain team2: received ws msg: {"type" : "submitoffer","copywriteid":"undefined", "copywritedate":"03/17","copywriteinstid": "undefined","copyright_inst_name":"StudioC","singerid":"user_type1_1","songid":"kc6979312","copywritestartdate":"03/17","copywriteenddate":"04/17","contractid":"undefined","contractvalue":"4000","v":1}
+			 */
 			chaincode.invoke.Set_Contract([data.songid,data.copywriteid,data.copywritedate,data.copywriteinstid,data.copyright_inst_name,data.singerid, data.copywritestartdate,data.copywriteenddate,data.contractid], cb_invoked);	//create a new song		
 			console.log('karachain svc:submitted offer ',data.songid);
 			
