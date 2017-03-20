@@ -348,15 +348,15 @@ module.exports.process_msg = function(wssvc, data){
 		}
 	}
 	//get songs callback
-	function cb_getoffers(e, contracts){
+	function cb_getoffers(e, bccontracts){
 		var contracts ={};
 		if(e != null) {
 			console.log('[query contracts error] did not get query response:', e);
 		}else{
-			if (contracts != null){
-				console.log('[query contracts response] got query response:', contracts);
+			if (bccontracts != null){
+				console.log('[query contracts response] got query response:', bccontracts);
 				//build songs json
-				var contractObj = JSON.parse(contracts);
+				var contractObj = JSON.parse(bccontracts);
 				contracts = contractObj.Contracts;
 				
 			}else{
