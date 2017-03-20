@@ -358,6 +358,12 @@ module.exports.process_msg = function(wssvc, data){
 				//build songs json
 				var contractObj = JSON.parse(bccontracts);
 				contracts = contractObj.Contracts;
+				//add index
+				var id = 0;
+				var i = 0;
+				for (i = 0; i < contracts.length; i++) { 
+				    contracts[i].id = id++; 
+				    }
 				
 			}else{
 				console.log('[query contracts response] NULL query response:');

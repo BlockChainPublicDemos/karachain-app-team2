@@ -114,11 +114,16 @@ app.get('/', function(req, res) {
 	 */
 	var contractObj =  {"Contracts":[{"Copyright_Ids":"cw8017108","Copyright_date_created":"01/30/2017","Copyright_date_accepted":"","Copyright_date_rejected":"","Copyright_Institution_Id":"ci6556271","Copyright_Institution_Name":"institution","Copyright_State":"","Contract_date_from":"01/30/2017","Contract_date_to":"01/30/2017","SmartContract_ID":"ct8981330"},{"Copyright_Ids":"cw2540339","Copyright_date_created":"01/30/2017","Copyright_date_accepted":"","Copyright_date_rejected":"","Copyright_Institution_Id":"ci9358508","Copyright_Institution_Name":"institution","Copyright_State":"","Contract_date_from":"01/30/2017","Contract_date_to":"01/30/2017","SmartContract_ID":"ct2738039"},{"Copyright_Ids":"cw4566778","Copyright_date_created":"03/20/17","Copyright_date_accepted":"","Copyright_date_rejected":"","Copyright_Institution_Id":"ci7177279","Copyright_Institution_Name":"StudioK","Copyright_State":"","Contract_date_from":"04/29/17","Contract_date_to":"04/30/17","SmartContract_ID":"ct2778628"}]};
 	var contracts = contractObj.Contracts;
+	var id = 0;
+	var i = 0;
+	for (i = 0; i < contracts.length; i++) { 
+	    contracts[i].id = id++; 
+	    }
 	console.log("root URL ",contracts);
 	var parsed = JSON.parse('{"SONG_ID_001":{"Song_ID":"SONG_ID_001","Date_created":"26.02.2017","Singer_Id":"Singer_ID_123","Singer_Name":"Singer_ANYBODY","Video_Id":"Video_ID_001","Owner":"","Video_Link":"http:123.de","Video_date_created":"26.02.2017","Video_QR_code_Id":"QR_STRING123","Venue_Id":"Venue_ID_001","Venue_Name":"Venue_Name_NY","User_rating":{},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"Song_ANYONE","AVG_Rating":0},"SONG_ID_002":{"Song_ID":"SONG_ID_002","Date_created":"26.02.2017","Singer_Id":"Singer_ID_123","Singer_Name":"Singer_ANYBODY","Video_Id":"Video_ID_001","Owner":"","Video_Link":"http:123.de","Video_date_created":"26.02.2017","Video_QR_code_Id":"QR_STRING123","Venue_Id":"Venue_ID_001","Venue_Name":"Venue_Name_NY","User_rating":{},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"Song_ANYONE","AVG_Rating":0},"kc4059949":{"Song_ID":"kc4059949","Date_created":"http://trotzkowski.de/","Singer_Id":"user_type1_1","Singer_Name":"Carsten","Video_Id":"vd9291200","Owner":"","Video_Link":"https://www.youtube.com/watch?v=Lsty-LgDNxc","Video_date_created":"http://trotzkowski.de/","Video_QR_code_Id":"qr9702995","Venue_Id":"vu6975760","Venue_Name":"internet","User_rating":{"user_type2_0":5},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"RockNRoll","AVG_Rating":5},"kc6508151":{"Song_ID":"kc6508151","Date_created":"01/01/2017","Singer_Id":"user_type1_1","Singer_Na 1me":"Carsten","Video_Id":"vd2326197","Owner":"","Video_Link":"https://www.youtube.com/watch?v=Lsty-LgDNxc","Video_date_created":"01/01/2017","Video_QR_code_Id":"qr746245","Venue_Id":"vu5722680","Venue_Name":"lazy dog","User_rating":{"user_type2_0":5},"Obsolete":false,"Status":"UNDEFINED","Song_Name":"RockNRoll","AVG_Rating":5}}') ;
     console.log("root URL ",Object.keys(parsed) );
    var songarray = new Array();
-   var id = 0;
+   id = 0;
    for (var prop in parsed) {
 	   console.log('parsed.' + prop, '=', parsed[prop]);
 	   parsed[prop].id = id++;
