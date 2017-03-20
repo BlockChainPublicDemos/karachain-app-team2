@@ -237,12 +237,12 @@ module.exports.process_msg = function(wssvc, data){
 			 * singerid, contract id, boolean, date
 			 */
 			data.singerid = lastSingerId;
-			data.songid = lastSongId;
-			data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
-			data.accepted = false;
-			data.date = "01/30/2017";
+			//data.songid = lastSongId;
+			//data.contractid = "ct"+Math.round(Math.pow(10,7)*Math.random());
+			//data.accepted = false;
+			//data.date = "01/30/2017";
 			
-			chaincode.invoke.Set_Contract_Response([data.singerid,data.contractid,data.accepted,data.date], cb_invoked);	//create a new song		
+			chaincode.invoke.Set_Contract_Response([data.singerid,data.contractid,data.accepted,data.date], cb_invoked);	//accept/reject offer	
 			console.log('karachain svc:accept offer ',data.songid);
 		}
 		else if(data.type == 'transfer'){
