@@ -146,8 +146,8 @@ module.exports.process_msg = function(wssvc, data){
 			 */
 			//TODO get data from visitor client
 			//data.rating = 5;
-			data.songid = lastSongId;  
-			chaincode.invoke.Set_Rating([data.songid,data.rating,lastVisitorId], cb_invoked);	//create a new song		
+			//data.songid = lastSongId;  
+			chaincode.invoke.Set_Rating([data.songid,data.rating,lastVisitorId], cb_invoked);	//update vote
 		}
 		else if(data.type == 'viewmyperformances'){
 			console.log('karachain svc: get my performances');
