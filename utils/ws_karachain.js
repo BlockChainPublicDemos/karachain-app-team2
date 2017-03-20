@@ -211,6 +211,20 @@ module.exports.process_msg = function(wssvc, data){
 			
 		}
 		else if(data.type == 'getmyoffers'){
+			/*
+			 * type Contract struct {
+	Copyright_Id               string `json:"Copyright_Ids"`
+	Copyright_date_created     string `json:"Copyright_date_created"`
+	Copyright_date_accepted    string `json:"Copyright_date_accepted"`
+	Copyright_date_rejected    string `json:"Copyright_date_rejected"`
+	Copyright_Institution_Id   string `json:"Copyright_Institution_Id"`
+	Copyright_Institution_Name string `json:"Copyright_Institution_Name"`
+	Copyright_State            string `json:"Copyright_State"`
+	Contract_date_from         string `json:"Contract_date_from"`
+	Contract_date_to           string `json:"Contract_date_to"`
+	SmartContract_ID           string `json:"SmartContract_ID"`
+}
+			 */
 			console.log('karachain svc: get my offers');
 			data.singerid = lastSingerId;
 			chaincode.query.Get_Contracts([data.singerid], cb_getoffers);
@@ -334,18 +348,23 @@ module.exports.process_msg = function(wssvc, data){
 		}
 	}
 	//get songs callback
-	function cb_getoffers(e, response){
+	function cb_getoffers(e, contracts){
+		var contracts ={};
 		if(e != null) {
 			console.log('[query contracts error] did not get query response:', e);
 		}else{
-			if (response != null){
-				console.log('[query contracts response] got query response:', response);
+			if (contracts != null){
+				console.log('[query contracts response] got query response:', contracts);
 				//build songs json
+				var contractObj = JSON.parse(contracts);
+				contracts = contractObj.Contracts;
+				
 			}else{
 				console.log('[query contracts response] NULL query response:');
 				//build null response json
 			}
 		}
+		sendJson(JSON.stringify(contracts));
 	}
 	//call back for getting the blockchain stats, lets get the block stats now
 	function cb_chainstats(e, chain_stats){
